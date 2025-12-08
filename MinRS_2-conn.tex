@@ -17,7 +17,8 @@
 \usepackage{algpseudocode} %%% for comm. to N-sensei
 % \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage{tikz}
-\usepackage{color}
+\usepackage{xcolor}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % newcommand
@@ -115,6 +116,44 @@
 \newcommand{\SrcExc}{\mathit{SrcExc}}
 \newcommand{\Nil}{\textsc{Nil}\xspace}
 
+\usepackage[british,american]{babel}
+\newif\ifbritish
+% \britishtrue   % or false
+\makeatletter
+\addto\captionsbritish{\britishtrue}
+\addto\captionsamerican{\britishfalse}
+\makeatother
+\usepackage{mfirstuc}
+\newcommand{\engvariation}[2]{%
+  \ifbritish
+    #1%
+  \else
+    #2%
+  \fi\xspace
+}
+
+\newcommand{\neighbour}[0]{\engvariation{neighbour}{neighbor}}
+\newcommand{\Neighbour}[0]{\MFUsentencecase{\neighbour}}
+
+\newcommand{\initialise}[0]{\engvariation{initialise}{initialize}}
+\newcommand{\Initialise}[0]{\MFUsentencecase{\initialise}}
+
+
+\newif\ifhyphenationafternon
+\hyphenationafternonfalse
+\newcommand{\hyphenvariation}[2]{%
+  \ifhyphenationafternon
+    #1%
+  \else
+    #2%
+  \fi\xspace
+}
+
+\newcommand{\nonzero}{\hyphenvariation{non-zero}{nonzero}}
+\newcommand{\nonnegative}{\hyphenvariation{non-negative}{nonnegative}}
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % title information
 \title{Simpler Computation of Minimal Removable Sets in 2-Edge-Connected Systems for Undirected Graphs}
@@ -124,6 +163,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % document
 \begin{document}
+% \selectlanguage{american}
+\selectlanguage{british}
 \maketitle
 
 \section{Introduction}
@@ -133,13 +174,13 @@
 \section{Preliminaries}
 \label{sec:prel}
 Throughout the paper, we assume that a graph is simple and undirected.
-% We also assume that a nonnegative integer $k$ is given. 
+% We also assume that a \nonnegative integer $k$ is given. 
 
 For a graph $G=(V,E)$ with a vertex set $V$
 and an edge set $E$,
-we may abbreviate an edge $\{u,v\} \in E$ into $uv$ (or equivalently $vu$)
+we may abbreviate an edge $\{u,v\} \in E$ as $uv$ (or equivalently $vu$)
 for simplicity.
-For a vertex $v \in V$, we denote by $N_G(v)$ the set of neighbors of $v$. 
+For a vertex $v \in V$, we denote by $N_G(v)$ the set of {\neighbour}s of $v$. 
 For $S \subseteq V$, we denote by $G[S]$ the subgraph of $G$
 induced by $S$.
 We denote by $G-S$ the subgraph obtained by
@@ -154,7 +195,7 @@ A \emph{DFS-tree} of a connected undirected graph~$G = (V,E)$
 is a spanning tree~$T$ obtained by performing a depth-first search (DFS) on $G$.
 We root $T$ at an arbitrary vertex $r \in V$.
 % Subtree
-For $v\in V$, we denote by $T_v$ the subtree of $T$
+For each $v\in V$, we denote by $T_v$ the subtree of $T$
 rooted at $v$.
 
 An edge in $E$ is called a \emph{tree edge} if it belongs to $T$,
@@ -162,19 +203,20 @@ and a \emph{back edge} otherwise.
 %
 For $u,v \in V$,
 we say that $u$ is an \emph{ancestor} of $v$
-if $u$ lies on the unique $r$--$v$-path in $T$.
-If $u$ is an ancestor of $v$ and $u \neq v$,
+if $u$ lies on the unique $r$--$v$ path in $T$.
+Moreover, if $u$ is an ancestor of $v$ and $u \neq v$,
 then we say that $u$ is a \emph{proper ancestor} of $v$,
-and that $v$ is a \emph{descendant} (resp., a \emph{proper descendant}) of $u$.
+and $v$ is correspondingly
+a (\emph{proper}) \emph{descendant} of $u$.
 If $uv$ is a tree edge and $u$ is an ancestor of $v$,
 then $u$ is the \emph{parent} of $v$;
-we denote it by $\pi(v)=u$.
+we denote this by $\pi(v)=u$.
 
 % DFS-index
 During the DFS,
 each vertex is assigned a unique integer called \emph{DFS-index},
-which indicates the order of visiting time in the DFS.
-For $v \in V$, we denote by $\mathit{dfsId}(v)$ the DFS-index of $v$.
+which records the order in which the DFS visits the vertices.
+For $v \in V$, we denote its DFS-index by $\mathit{dfsId}(v)$.
 Every vertex has a smaller DFS-index than any of its descendants.
 
 % orientation of edges
@@ -204,7 +246,8 @@ Furthermore, we define the \emph{cover-source multiplicity} of $uv$ to be
 $
 \CovSrc(uv)=\bigl|\{x \in V(T_v) \mid \text{There is } y \text{ s.t. } (x,y)\in \Cov(uv)\}\bigr|,
 $
-that is, the number of distinct descendants that serve as tails of back edges covering~$uv$.
+that is, the number of distinct descendants of $v$
+that serve as tails of back edges covering~$uv$.
 
 % longest back edge outgoing from v
 For a vertex $x \in V$,
@@ -231,9 +274,8 @@ we here describe the algorithm for computing the cover multiplicities;
 the cover-source multiplicities can be computed with a minor modification
 as described at the end of this section.
 
-
-We first perform a DFS on $G$ starting from an arbitrary vertex $r \in V$
-and let $T$ be the resulting DFS-tree.
+In this section, we assume that a DFS-tree $T$ of $G$,
+rooted at an arbitrary vertex $r \in V$, is already given.
 The algorithm consists of two phases.
 In the first phase, we process each back edge to update an auxiliary
 value called \emph{cover-delta value} associated with its endpoints.
@@ -281,7 +323,7 @@ multiplicity, which we show below.
   Since $y$ is a proper ancestor of $x$,
   the case with $x \not\in V(T_v)$ and $y \in V(T_v)$ cannot occur.
 
-  Therefore, the only back edges that contribute a nonzero amount are those
+  Therefore, the only back edges that contribute a \nonzero amount are those
   that cover $uv$,
   and each such edge contributes exactly $+1$.
 \end{proof}
@@ -312,7 +354,7 @@ The details are shown in Algorithm~\ref{alg:cov_mult}.
     \For{\textbf{each} child $w$ of the root $r$ in $T$}
       \State Execute \Call{CoverMultiplicity-DFS}{$w$}
     \EndFor;
-    \State \textbf{output} $\CovMult$
+    \State \textbf{output} $\CovMult(e)$ for all tree edges $e$ in $E(T)$
     
     \\\Procedure{CoverMultiplicity-DFS}{$v$}
     \State $\CovMult(\pi(v)v) := \delta(v)$;
@@ -374,9 +416,9 @@ The details are shown in Algorithm~\ref{alg:cov_mult}.
   
   Next, we consider the case other than the leaf case. 
   We assume that, for any child $w$ of $v$ in $T$,
-  $\Call{CoverMultiplicity-DFS}{$w$}$ correctly computes
+  \Call{CoverMultiplicity-DFS}{$w$} correctly computes
   the sum of the cover-delta values for all vertices in $T_w$.
-  Then, the algorithm computzes
+  Then, the algorithm computes
   \[
   \delta(v) + \sum_{w \text{:~child of } v} \sum_{z \in V(T_w)} \delta(z)
   = \sum_{z \in V(T_v)} \delta(z)
@@ -423,7 +465,8 @@ Thus, by replacing $\delta$ with $\delta_{\text{src}}$ in Algorithm~\ref{alg:cov
 we can compute the cover-source multiplicities for all tree edges.
 
 
-Therefore, we obtain the following theorem that summarises the results in this section.
+Therefore, we obtain the following theorem that 
+\engvariation{summarises}{summarizes} the results in this section.
 
 \begin{thm}
   \label{thm:cov_mult}
@@ -459,9 +502,10 @@ We first show a basic property of leaves in a DFS-tree
 of a 2-edge-connected undirected graph.
 \begin{lem}
   \label{lem:leaf_not_ap}
-  Let $G=(V,E)$ be a 2-edge-connected undirected graph and
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$
+  and
   $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  Any leaf is not an articulation point of $G$.
+  Any leaf of $T$ is not an articulation point of $G$.
 \end{lem}
 \begin{proof}
   Since $T$ is a spanning tree of $G$,
@@ -532,9 +576,10 @@ of a 2-edge-connected undirected graph.
 
 \begin{lem}
   \label{lem:leaf_mrs}
-  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$ and,
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$ and
   $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  Let $x$ be a leaf of $T$ that has back edges and let $y :=\lbeTarget(x)$.
+  Let $x$ be a leaf of $T$ %that has back edges
+  and $y :=\lbeTarget(x)$.
   Then, $\{x\}$ is a MinRS of $G$ if and only if,
   for any tree edge $(u,v)$ on the $y$--$\pi(x)$ path in $T$,
   there exists a back edge outgoing from some vertex in $T_v - x$
@@ -552,11 +597,12 @@ of a 2-edge-connected undirected graph.
 
   % \medskip
   ($\Longleftarrow$)
-  We suffice to show that $G - x$ is 2-edge-connected.
+  It suffices to show that $G - x$ is 2-edge-connected.
   By \lemref{leaf_not_ap},
   $G - x$ is connected.
   We show that there is no bridge in $G - x$.
-  Every back edge $(x', y')$ with $x', y' \neq x$ is not a bridge in $G - x$,
+  Every back edge $(x', y') \in E \setminus E(T)$
+  with $x', y' \neq x$ is not a bridge in $G - x$,
   since $x'y'$ and the $y'$--$x'$ path in $T$ form a cycle in $G - x$.
   Next, we consider tree edges in $G - x$.
   For any tree edge not on the $y$--$\pi(x)$-path in $T$,
@@ -573,9 +619,10 @@ of a 2-edge-connected undirected graph.
 \end{proof}
 
 
-Here, we introduce the \emph{source-exclusive coverage set}~$\SrcExc_v$ of $v$ for each vertex $v \in V$,
+Here, we introduce the \emph{source-exclusive coverage set}~$\SrcExc_v$ of each vertex $v \in V$,
 defined to be the set of tree edge $e$ in $T$ such that
-$\CovSrc(e) = 1$ and $e$ is covered by back edges outgoing from $v$.
+$\CovSrc(e) = 1$ and $e$ is covered by
+only back edges outgoing from $v$.
 Or equivalently,
 if $e \in \SrcExc_v$,
 then $e$ is covered by back edges outgoing from $v$,
@@ -583,23 +630,69 @@ and no back edge outgoing from any other vertex covers $e$.
 Any tree edge in $\SrcExc_v$ must be on the $\lbeTarget(v)$--$\pi(v)$ path in $T$.
 
 By \lemref{leaf_mrs},
-$\{v\}$ is a MinRS of $G$ if and only if $\SrcExc_v = \emptyset$.
+$\{x\}$ is a MinRS of $G$ if and only if $\SrcExc_x = \{\pi(x)x\}$.
 Thus, in order to find all MinRSs consisting of only leaves of $T$,
 it suffices to compute $\SrcExc_v$ for each leaf $v$ of $T$.
 This can be done by the Algorithm~\ref{alg:treeedge_to_backedge}
 that traverses $T$ in a depth-first manner
 and collects tree edges with cover-source multiplicity 1
 covered by back edges outgoing from each leaf.
+Before describing the algorithm,
+there are some lemmas to show its correctness.
+
+\begin{lem}
+  \label{lem:leaf_longest_backedge_coverage}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph and
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$.
+  Let $l$ be a leaf of $T$ and
+  $v \neq r$ be an ancestor of $l$ in $T$.
+  The tree edge $\pi(v)v$ is covered by the longest back edge $\lbe(l)$ outgoing from $l$
+  if and only if $\mathit{dfsId}(\lbeTarget(l)) < \mathit{dfsId}(v)$.
+\end{lem}
+\begin{proof}
+  Let $y := \lbeTarget(l)$.
+  Since both $y$ and $v$ are on the unique $\pi(l)$--$r$ path in $T$,
+  $y$ is an ancestor or a descendant of $v$.
+  We have $\mathit{dfsId}(y) < \mathit{dfsId}(v)$
+  if and only if $y$ is a proper ancestor of $v$.
+  By the definition of coverage,
+  $\pi(v)v$ is covered by $\lbe(l)$
+  if and only if $y$ is a proper ancestor of $v$.
+\end{proof}
+
+\begin{lem}
+  \label{lem:leaves_longest_backedge_coverage}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph and
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$.
+  Let $l, l'$ be distinct leaves of $T$ and
+  $v \neq r$ be a common ancestor of $l$ and $l'$ in $T$.
+  We assume that $\mathit{dfsId}(\lbeTarget(l)) \geq \mathit{dfsId}(\lbeTarget(l'))$.
+  If a tree edge $\pi(v)v$ is covered by the longest back edge $\lbe(l)$ outgoing from $l$,
+  then $\pi(v)v$ is also covered by the longest back edge $\lbe(l')$ outgoing from $l'$.
+\end{lem}
+\begin{proof}
+  By \lemref{leaf_longest_backedge_coverage},
+  since $\pi(v)v$ is covered by $\lbe(l)$,
+  we have $\mathit{dfsId}(\lbeTarget(l)) < \mathit{dfsId}(v)$.
+  By the assumption,
+  $\mathit{dfsId}(\lbeTarget(l')) \leq \mathit{dfsId}(\lbeTarget(l)) < \mathit{dfsId}(v)$ holds.
+  By \lemref{leaf_longest_backedge_coverage} again,
+  $\pi(v)v$ is also covered by $\lbe(l')$.
+\end{proof}
+
+We are now ready to describe Algorithm~\ref{alg:treeedge_to_backedge}
+that computes $\SrcExc_v$ for each leaf $v$ of $T$.
+
 % ALGO
 \begin{algorithm}[t]
-  \caption{Computation of source-exclusive coverage set for Each Leaf}
+  \caption{Computation of source-exclusive coverage set for each leaf}
   \label{alg:treeedge_to_backedge}
   \begin{algorithmic}[1]
     \Require A 2-edge-connected undirected graph $G=(V,E)$,
     DFS-tree $T$ of $G$ rooted at $r \in V$, and
     the cover-source multiplicities $\CovSrc$ for all tree edges in $T$
     \Ensure The source-exclusive coverage sets $\SrcExc_v$ for all leaves $v$ of $T$
-    \State Initialise $\SrcExc_v := \emptyset$ for all leaves $v$ of $T$;
+    \State \Initialise $\SrcExc_v := \emptyset$ for all leaves $v$ of $T$;
     \For{\textbf{each} child $w$ of the root $r$ in $T$}
       \State Execute \Call{TreeEdgeToBackEdge}{$w$}
     \EndFor;
@@ -608,19 +701,27 @@ covered by back edges outgoing from each leaf.
 
 
     \Procedure{TreeEdgeToBackEdge}{$v$}
-    \State $l := \Nil$;
-    \If{$v$ is a leaf}
-      \State $l := v$
-    \EndIf;
+    % \State $l := \Nil$;
+    % \If{$v$ is a leaf}
+    %   \State $l := v$
+    % \EndIf;
+    \State $l := \begin{cases}
+      v & \text{if } v \text{ is a leaf} \\
+      \Nil & \text{otherwise}
+    \end{cases}$;
     \For{\textbf{each} child $w$ of $v$ in $T$}
       \State Execute \Call{TreeEdgeToBackEdge}{$w$};
       \State Let $l'$ be the returned leaf;
       \If{$l' \neq \Nil$ and [$l = \Nil$ or $ \mathit{dfsId}(\lbeTarget(l')) < \mathit{dfsId}(\lbeTarget(l))$]}
+      \label{codeline:update_l}
         \State $l := l'$
       \EndIf
     \EndFor;
+    \If{$l \neq \Nil$ and $\mathit{dfsId}(\lbeTarget(l)) \geq \mathit{dfsId}(v)$}\label{codeline:check_l}
+    \State $l := \Nil$
+    \EndIf;
     
-    \State $\SrcExc_l := \SrcExc_l \cup \{uv\}$ \textbf{if} $\CovSrc(uv) = 1$; \Comment{$l$ is not \Nil if this line is executed}
+    \State $\SrcExc_l := \SrcExc_l \cup \{\pi(v)v\}$ \textbf{if} $\CovSrc(\pi(v)v) = 1$ and $l \neq \Nil$;
     \State \textbf{return} $l$
     \EndProcedure
   \end{algorithmic}
@@ -629,7 +730,7 @@ covered by back edges outgoing from each leaf.
 \begin{lem}
   \label{lem:treeedge_to_backedge}
   Given a 2-edge-connected undirected graph $G=(V,E)$
-  with $n=|V|$ and $m=|E|$,
+  with $n=|V| \geq 3$ and $m=|E|$,
   its DFS-tree $T$ rooted at $r \in V$, and 
   the cover-source multiplicities $\CovSrc$ for all tree edges in $T$,
   Algorithm~\ref{alg:treeedge_to_backedge} computes $\SrcExc_v$
@@ -637,17 +738,55 @@ covered by back edges outgoing from each leaf.
   in $O(n)$ time.
 \end{lem}
 \begin{proof}
-  TODO
+  (Correctness)
+  We first show that the case with $v$ being a leaf.
+  In this case, since there is no child of $v$ in $T$,
+  the algorithm returns $l = v$.
+  Moreover, $\pi(l)l$ is clearly covered by $\lbe(l)$ and
+  no longest back edge outgoing from other leaf covers $\pi(l)l$.
+  This means that, if $\CovSrc(\pi(l)l) = 1$,
+  then $\pi(l)l \in \SrcExc_l$ holds.
+
+  Next, we consider the case other than the leaf case. 
+  We assume that, for any child $w$ of $v$ in $T$,
+  \Call{TreeEdgeToBackEdge}{$w$} correctly computes
+  a leaf $l'$ such that
+  every tree edge in $\SrcExc_{l'}$ is covered by $\lbe(l')$
+  and no longest back edge outgoing from other leaf covers such tree edges.
+  By \lemref{leaves_longest_backedge_coverage},
+  we need to consider only the leaf $l'$ with the smallest
+  $\mathit{dfsId}(\lbeTarget(l'))$ among such leaves $l'$ returned from children of $v$.
+  The algorithm correctly selects such a leaf $l$ (line \ref{codeline:update_l}).
+  If $\mathit{dfsId}(\lbeTarget(l)) \geq \mathit{dfsId}(v)$,
+  then, by \lemref{leaf_longest_backedge_coverage},
+  no longest back edge outgoing from $l$ covers $\pi(v)v$,
+  and hence, we set $l := \Nil$ (line \ref{codeline:check_l}).
+  Then, if $l \neq \Nil$, then
+  the tree edge $\pi(v)v$ is covered by $\lbe(l)$.
+  Therefore, if $\CovSrc(\pi(v)v) = 1$ and $l \neq \Nil$,
+  then we can insert $\pi(v)v$ into $\SrcExc_l$.
+
+  (Time complexity)
+  We visit each vertex exactly once,
+  and consider all tree edges exactly once,
+  which means we can compute $\SrcExc_v$ for all leaves $v$ of $T$.
+  Since we traverse only tree edges in $T$,
+  we can execute the algorithm in $O(n)$ time.
 \end{proof}
 
 \begin{thm}
   \label{thm:leaf_mrs}
   Given a 2-edge-connected undirected graph $G=(V,E)$
   with $n=|V|$ and $m=|E|$,
-  we can compute all MinRSs consisting of only leaves of a DFS-tree
+  we can compute all MinRSs consisting of only leaves of a DFS-tree $T$
   in $O(n+m)$ time.
 \end{thm}
 \begin{proof}
+  % Note that we asuume that a graph is simple throughout this paper.
+  Note that we assume that a graph has no parallel edges throughout this paper.
+  If $|V| < 3$, i.e., $G$ consists of only one vertex,
+  then $G$ has no MinRS.
+  Thus, we assume that $|V| \geq 3$.
   As the given graph is 2-edge-connected,
   each tree edge is covered by at least one back edge.
   By \lemref{leaf_mrs}, $\{v\}$ is a MinRS of $G$ if and only if
@@ -665,7 +804,7 @@ covered by back edges outgoing from each leaf.
   in $O(n+m)$ time.
 \end{proof}
 
-\subsection{Maximal 2-deg Path MiRSs}
+\subsection{Maximal 2-deg Path MinRSs}
 \label{sec:2deg_path_mrs}
 TODO
 
