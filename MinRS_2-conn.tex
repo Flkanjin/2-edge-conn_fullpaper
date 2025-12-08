@@ -793,12 +793,12 @@ that computes $\SrcExc_v$ for each leaf $v$ of $T$.
   for any tree edge is covered by back edges outgoing from vertices other than $v$,
   which means that $\CovSrc(e) \geq 2$.
   Thus, we can check whether $\{v\}$ is a MinRS of $G$
-  by checking whether $\mathit{BE}_v$ is empty or not.
+  by checking whether $\SrcExc_v$ is equal to $\{\pi(v)v\}$ ot not.
   By \thmref{cov_mult},
   we can compute the cover-source multiplicities for all tree edges
   in $O(n+m)$ time.
   By \lemref{treeedge_to_backedge},
-  we can compute the sets $\mathit{BE}_v$ for all leaves $v$ of $T$
+  we can compute the sets $\SrcExc_v$ for all leaves $v$ of $T$
   in $O(n)$ time.
   Thus, we can compute all MinRSs consisting of only leaves of $T$
   in $O(n+m)$ time.
