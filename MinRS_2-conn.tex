@@ -18,6 +18,7 @@
 % \usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage{tikz}
 \usepackage{xcolor}
+\usepackage{hyperref}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,6 +36,7 @@
 \newcommand{\bbR}{{\mathbb R}}
 \newcommand{\MS}{{\mathcal S}}
 \newcommand{\MC}{{\mathcal C}}
+\newcommand{\MY}{{\mathcal Y}}
 
 \newcommand{\vc}[1]{\mbox{\boldmath$ #1 $}}
 \newcommand{\myhline}{
@@ -109,17 +111,28 @@
 \renewcommand{\baselinestretch}{1.20}
 % \setlength{\columnsep}{1.0cm}
 
+\usepackage{enumitem}
 \usepackage{xspace}
-\newcommand{\lbe}{\mathit{lbe}}
-\newcommand{\lbeTarget}{\mathit{lbeTarget}}
+\usepackage{mfirstuc}
+% \newcommand{\lbe}{\mathit{lbe}}
+% \newcommand{\lbeTarget}{\mathit{lbeTarget}}
 \newcommand{\Cov}{\mathit{Cov}}
 \newcommand{\CovMult}{\mathit{CovMult}}
-\newcommand{\CovSrc}{\mathit{CovSrcMult}}
-\newcommand{\SrcExc}{\mathit{SrcExc}}
+% \newcommand{\CovSrc}{\mathit{CovSrcMult}}
+% \newcommand{\SrcExc}{\mathit{SrcExc}}
 \newcommand{\Nil}{\textsc{Nil}\xspace}
+\newcommand{\True}{\textsc{True}\xspace}
+\newcommand{\False}{\textsc{False}\xspace}
 \newcommand{\id}{\mathit{id}}
 \newcommand{\CovDesc}[1]{\mathit{CovDesc}_{#1}}
 \newcommand{\CovAnc}[1]{\mathit{CovAnc}_{#1}}
+
+\newcommand{\maxTwoDegPath}{degree-two block\xspace}
+\newcommand{\MaxTwoDegPath}{\MFUsentencecase{\maxTwoDegPath}\xspace}
+\newcommand{\MaxTwoDegPathCap}{Degree-Two Block\xspace}
+\newcommand{\maxTwoDegPaths}{{\maxTwoDegPath}s\xspace}
+\newcommand{\MaxTwoDegPaths}{\MFUsentencecase{\maxTwoDegPaths}\xspace}
+
 
 \usepackage[british,american]{babel}
 \newif\ifbritish
@@ -128,7 +141,6 @@
 \addto\captionsbritish{\britishtrue}
 \addto\captionsamerican{\britishfalse}
 \makeatother
-\usepackage{mfirstuc}
 \newcommand{\engvariation}[2]{%
   \ifbritish
     #1%
@@ -145,6 +157,9 @@
 \newcommand{\initialise}[0]{\engvariation{initialise}{initialize}}
 \newcommand{\Initialise}[0]{\MFUsentencecase{\initialise}}
 
+\newcommand{\categorisation}[0]{\engvariation{categorisation}{categorization}}
+\newcommand{\Categorisation}[0]{\MFUsentencecase{\categorisation}}
+
 
 \newif\ifhyphenationafternon
 \hyphenationafternonfalse
@@ -158,11 +173,22 @@
 
 \newcommand{\nonzero}{\hyphenvariation{non-zero}{nonzero}}
 \newcommand{\nonnegative}{\hyphenvariation{non-negative}{nonnegative}}
+\newcommand{\nonempty}{\hyphenvariation{non-empty}{nonempty}}
 
 \newcommand{\plusassign}[2]{#1 := #1 + #2}
 \newcommand{\minusassign}[2]{#1 := #1 - #2}
+\newcommand{\cupappend}[2]{#1 := #1 \cup #2}
+\newcommand{\capappend}[2]{#1 := #1 \cap #2}
 
-
+\newif\ifsetminusfordiff
+\setminusfordifftrue
+\newcommand{\diffset}[2]{%
+  \ifsetminusfordiff
+    #1 \setminus #2%
+  \else
+    #1 - #2%
+  \fi\xspace%
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % title information
@@ -196,14 +222,23 @@ For a graph $G=(V,E)$ with a vertex set $V$
 and an edge set $E$,
 we may abbreviate an edge $\{u,v\} \in E$ as $uv$ (or equivalently $vu$)
 for simplicity.
+% neighbours
 For a vertex $v \in V$, we denote by $N_G(v)$ the set of \neighbours of $v$. 
-For $S \subseteq V$, we denote by $G[S]$ the subgraph of $G$
+Let $S \subseteq V$ be a subset of vertices.
+We denote by $N_G(S) = \bigcup_{v \in S} N_G(v) \setminus S$,
+% induced subgraph
+the set of open \neighbours of $S$ in $G$.
+We denote by $G[S]$ the subgraph of $G$
 induced by $S$.
 We denote by $G-S$ the subgraph obtained by
 removing $S$ and all edges to incident to $S$,
 that is, $G - S = G[V-S]$.
 If $S = \{v\}$,
 then we simply write $G-v$ instead of $G - \{v\}$.
+% \maxTwoDegPath
+A \emph{\maxTwoDegPath} in $G$ is a maximal path
+whose vertices all have degree two in $G$.
+Note that a \maxTwoDegPath may consist of a single vertex.
 
 \subsection{DFS-Trees and Related Notions}
 \label{sec:prel_dfs}
@@ -215,7 +250,7 @@ We root $T$ at an arbitrary vertex $r \in V$.
 For each $v\in V$, we denote by $T_v$ the subtree of $T$
 rooted at $v$.
 
-An edge in $E$ is called a \emph{tree edge} if it belongs to $T$,
+An edge in $E$ is called a \emph{tree edge} if it appears in $T$,
 and a \emph{back edge} otherwise.
 %
 For $u,v \in V$,
@@ -229,20 +264,20 @@ If $uv$ is a tree edge and $u$ is an ancestor of $v$,
 then $u$ is the \emph{parent} of $v$;
 we denote this by $\pi(v)=u$.
 
-% DFS-index
-During the DFS,
-each vertex is assigned a unique integer called \emph{DFS-index},
-which records the order in which the DFS visits the vertices.
-For $v \in V$, we denote its DFS-index by $\mathit{dfsId}(v)$.
-Every vertex has a smaller DFS-index than any of its descendants.
+% % DFS-index
+% During the DFS,
+% each vertex is assigned a unique integer called \emph{DFS-index},
+% which records the order in which the DFS visits the vertices.
+% For $v \in V$, we denote its DFS-index by $\mathit{dfsId}(v)$.
+% Every vertex has a smaller DFS-index than any of its descendants.
 
 % orientation of edges
 We may orient edges based on the DFS-tree $T$:
 for a tree edge $\pi(v)v$, we orient it from $\pi(v)$ to $v$; and
 for a back edge $xy$, we orient it from the descendant to the ancestor.
 We may write $(u,v)$ and $(x,y)$ to indicate the orientation of edge $uv$ and $xy$,
-and refer to it as the \emph{outgoing edge} from $u$
-and the \emph{incoming edge} to $v$.
+and refer to it as the \emph{outgoing edge} from $u$ or $x$
+and the \emph{incoming edge} to $v$ or $y$.
 
 %
 We say that a tree edge $\pi(v)v$ is \emph{covered} by a back edge
@@ -259,14 +294,14 @@ $
 the set of back edges that cover $uv$.
 We refer to $\CovMult(uv) \triangleq |\Cov(uv)|$ as the \emph{cover multiplicity}
 of the tree edge $uv$.
-Furthermore, we define the \emph{cover-source multiplicity} of $uv$ to be
-$
-\CovSrc(uv)\triangleq \bigl|\{x \in V(T_v) \mid \text{There is } y \text{ s.t. } (x,y)\in \Cov(uv)\}\bigr|,
-$
-that is, the number of distinct descendants of $v$
-that serve as tails of back edges covering~$uv$.
+% Furthermore, we define the \emph{cover-source multiplicity} of $uv$ to be
+% $
+% \CovSrc(uv)\triangleq \bigl|\{x \in V(T_v) \mid \text{There is } y \text{ s.t. } (x,y)\in \Cov(uv)\}\bigr|,
+% $
+% that is, the number of distinct descendants of $v$
+% that serve as tails of back edges covering~$uv$.
 
-In addition to multiplicities,
+In addition to cover multiplicity,
 we also consider aggregated identifiers of endpoints of covering back edges.
 For a tree edge $uv$ and $i \in \{1, 2\}$, we define
 \[
@@ -277,16 +312,35 @@ For a tree edge $uv$ and $i \in \{1, 2\}$, we define
 We refer to these quantities as \emph{weighted cover information}.
 
 % longest back edge outgoing from v
-For a vertex $x \in V$,
-every vertex~$y$ with a back edge $(x, y)$
-lies on the unique $\pi(x)$--$r$ path in $T$.
-Among such vertices~$y$,
-let  $y^*$ denote
-%  the one with the smallest DFS-index,
-% that is, 
-the one closest to the root $r$ in $T$.
-We call the back edge $x y^*$ the \emph{longest back edge outgoing from $x$}
-and denote it by $\lbe(x)$ and $y^*$ by $\lbeTarget(x)$.
+% For a vertex $x \in V$,
+% every vertex~$y$ with a back edge $(x, y)$
+% lies on the unique $\pi(x)$--$r$ path in $T$.
+% Among such vertices~$y$,
+% let  $y^*$ denote
+% %  the one with the smallest DFS-index,
+% % that is, 
+% the one closest to the root $r$ in $T$.
+% We call the back edge $x y^*$ the \emph{longest back edge outgoing from $x$}
+% and denote it by $\lbe(x)$ and $y^*$ by $\lbeTarget(x)$.
+
+\subsection{Graph Contraction and Suppression}
+\label{sec:prel_contr_supp}
+Let $G=(V,E)$ be a graph.
+% contraction
+For $S \subseteq V$,
+the \emph{contraction} of $S$ in $G$
+is the graph obtained by
+merging all vertices in $S$ into a single vertex $s$,
+removing all edges with both endpoints in $S$,
+and replacing each edge with one endpoint in $S$ by an edge incident to $s$.
+% suppression
+For a vertex $v \in V$ with degree two,
+the \emph{suppression} of $v$ in $G$
+is the graph obtained by
+removing $v$ and its two incident edges,
+and adding a new edge between the two \neighbours of $v$.
+Equivalently, assuming that $v$ has two \neighbours $u$ and $w$,
+we contract the set $\{u,v\}$ or $\{v,w\}$ in $G$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -324,8 +378,48 @@ we can determine whether all covering back edges
 outgo from the same descendant or
 ingo to the same ancestor
 using the weighted cover information.
+%
+In order to show this,
+we first prove a general lemma on sequences of real numbers.
 
+\begin{lem}
+  \label{lem:seq_all_equal}
+  Let $(\alpha_1, \alpha_2, \dots, \alpha_q)$ be a sequence of $q$ real numbers.
+  Then, all elements in the sequence are equal, i.e.,
+  $\alpha_1 = \alpha_2 = \cdots = \alpha_q$,
+  if and only if
+  \[
+  \left(\sum_{i=1}^{q} \alpha_i\right)^2 = q  \sum_{i=1}^{q} \left(\alpha_i\right)^2.
+  \]
+\end{lem}
+\begin{proof}
+  We have
+  \begin{align*}
+    &q \sum_{i=1}^{q} \left(\alpha_i\right)^2
+    - \left(\sum_{i=1}^{q} \alpha_i\right)^2
+    = \sum_{i=1}^{q} (q-1)\left(\alpha_i\right)^2
+    - \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} 2 \alpha_i \alpha_j 
+    \\
+    &= \sum_{i=1}^{q} (q-i + i -1)\left(\alpha_i\right)^2
+    - \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} 2 \alpha_i \alpha_j
+    \\
+    &= \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} \left(\alpha_i\right)^2
+    + \sum_{i=2}^{q} \sum_{j=1}^{i-1} \left(\alpha_i\right)^2
+    - \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} 2 \alpha_i \alpha_j
+    \\
+    &= \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} \left[
+      \left(\alpha_i\right)^2 - 2 \alpha_i \alpha_j + \left(\alpha_j\right)^2 
+    \right]
+    = \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} \left(\alpha_i - \alpha_j\right)^2.
+  \end{align*}
+  Since each term in the last summation is non-negative, 
+  the entire summation is equal to zero if and only if
+  $\alpha_i = \alpha_j$ for all $i,j \in \{1, \dots, q\}$.
+\end{proof}
 
+Using \lemref{seq_all_equal},
+we can prove the following lemma
+on weighted cover information.
 \begin{lem}
   \label{lem:cov_info_use}
   Let $G=(V,E)$ be a 2-edge-connected undirected graph,
@@ -343,20 +437,10 @@ using the weighted cover information.
   \end{itemize}
 \end{lem}
 \begin{proof}
-  We prove the descendant-side condition.
-  \begin{align*}
-    &q \cdot \CovDesc{2}(uv) - \left(\CovDesc{1}(uv)\right)^2\\
-    &= q \cdot \sum_{i=1}^{q} \left(\id(x_i)\right)^2 - \left(\sum_{i=1}^{q} \id(x_i)\right)^2 \\
-    &= \sum_{i=1}^{q} (q-1)\left(\id(x_i)\right)^2 -
-    \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} 2 \id(x_i) \cdot \id(x_j) \\
-    &= \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} \left(\id(x_i) - \id(x_j)\right)^2;
-  \end{align*}
-  the last equality holds by rearranging the terms.
-  Since each term in the last summation is non-negative, 
-  the entire summation is equal to zero if and only if
-  $\id(x_i) = \id(x_j)$ for all $i,j \in \{1, \dots, q\}$,
-  which is equivalent to $x_1 = x_2 = \cdots = x_q$.
-  The ancestor-side condition can be proved similarly.
+  The conditions follow directly from \lemref{seq_all_equal}
+  by setting
+  $\alpha_i := \id(x_i)$ for the descendant-side condition
+  and $\alpha_i := \id(y_i)$ for the ancestor-side condition.
 \end{proof}
 
 
@@ -429,7 +513,7 @@ we perform:
   \label{alg:diff_agg}
   \begin{algorithmic}[1]
     \Require A rooted tree $T$,
-    an initilal value $A(e)$ for all tree edges $e$ in $E(T)$,
+    an initial value $A(e)$ for all tree edges $e$ in $E(T)$,
     and a sequence of update operations $(x,y,\alpha)$
     \Ensure The final values for all tree edges
     % % \State \Initialise $\Delta(v) := 0$ and $A(e) := 0$
@@ -488,7 +572,7 @@ we perform:
   \]
   that is the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
 
-  Since each update operation is processed in $O(1)$ time,
+  Since each update operation is processed in constant time,
   the total time for all $q$ update operations is $O(q)$.
   We visit each vertex exactly once,
   and consider all tree edges exactly once,
@@ -519,8 +603,8 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
   in $O(n+m)$ time:
   \begin{itemize}
   \item Cover multiplicity $\CovMult(uv)$;
-  \item Cover-source multiplicity $\CovSrc(uv)$;
-  \item Weighted cover information $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
+  % \item Cover-source multiplicity $\CovSrc(uv)$;
+  \item Weighted cover information $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$; and
   \item Weighted cover information $\CovAnc{1}(uv)$ and $\CovAnc{2}(uv)$.
   \end{itemize}
 \end{lem}
@@ -531,9 +615,9 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
   where $\alpha$ is set as follows:
   \begin{itemize}
   \item For $\CovMult(uv)$, set $\alpha := 1$;
-  \item For $\CovSrc(uv)$, set $\alpha := 1$ if $(x, y) = \lbe(x)$; otherwise, set $\alpha := 0$;
-  \item For $\CovDesc{i}(uv)$, set $\alpha := \id(x)^i$ for $i \in \{1, 2\}$; and
-  \item For $\CovAnc{i}(uv)$, set $\alpha := \id(y)^i$ for $i \in \{1, 2\}$.
+  % \item For $\CovSrc(uv)$, set $\alpha := 1$ if $(x, y) = \lbe(x)$; otherwise, set $\alpha := 0$;
+  \item For $\CovDesc{i}(uv)$, set $\alpha := \left(\id(x)\right)^i$ for $i \in \{1, 2\}$; and
+  \item For $\CovAnc{i}(uv)$, set $\alpha := \left(\id(y)\right)^i$ for $i \in \{1, 2\}$.
   \end{itemize}
   Since there are $O(m)$ back edges in $G$,
   we can perform $O(m)$ update operations on $T$.
@@ -768,13 +852,110 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
 %   Thus, the total time complexity is $O(n+m)$.
 % \end{proof}
 
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Mathematical Properties and Computation of Minimal Removable Sets}
 \label{sec:mrs_props}
-\subsection{DFS-Tree Leaf MinRSs}
+In this section, we study structural properties of MinRSs
+and present an efficient algorithm for computing all MinRSs
+in a 2-edge-connected undirected graph.
+% In \secref{mrs_props},
+
+
+MinRSs in a 2-edge-connected undirected graph
+have been studied in \cite{ISYH.2022,ITO.2022,TH.2025}.
+In these works, they showed the following necessary condition for MinRSs.
+\begin{lem}[Observation 3 in \cite{ISYH.2022,ITO.2022}(, Lemma 7 in \cite{TH.2025})]
+  \label{lem:mrs_cond}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$.
+  If a \nonempty proper subset $S \subset V$ is a MinRS of $G$,
+  then,
+  \begin{itemize}
+  \item $S$ forms \maxTwoDegPath in $G$;
+  or
+  \item $S$ is a singleton $\{v\}$ where $v \in V$.
+  \end{itemize}
+\end{lem}
+By \lemref{mrs_cond},
+we can list all candidates for MinRSs in $O(n+m)$ time
+by finding all \maxTwoDegPaths in $G$
+and collecting all singleton vertex sets.
+
+Based on \lemref{mrs_cond},
+we classify MinRSs into several types
+to make them easier to handle with a DFS-tree $T$ of $G$ rooted at an arbitrary vertex $r \in V$:
+\begin{itemize}
+\item the MinRS containing the root of the DFS-tree;
+\item MinRSs containing at least one leaf of the DFS-tree;
+\item MinRSs consisting only of internal vertices of the DFS-tree that form a \maxTwoDegPath in $G$; and
+\item MinRSs consisting of a single internal vertex of the DFS-tree with degree at least three in $G$.
+\end{itemize}
+
+The MinRS containing the root of the DFS-tree
+contains no leaf of the DFS-tree;
+this \categorisation is mutually exclusive.
+% Moreover,
+% if $r$ is contained in some MinRS,
+% then it is the only such MinRS in $G$:
+% $\{r\}$ if $\deg_G(r) \geq 3$ or a \maxTwoDegPath containing $r$ otherwise.
+
+
+\begin{lem}
+  \label{lem:mrs_root}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$
+  and $T$ be a DFS-tree of $G$ rooted at $r\in V$.
+  We can determine whether $G$ has a MinRS containing $r$
+  and find such a MinRS in $O(n+m)$ time.
+\end{lem}
+\begin{proof}
+  By \lemref{mrs_cond},
+  if $G$ has a MinRS containing $r$,
+  then it is either $\{r\}$ ($\deg_G(r) \geq 3$) or a \maxTwoDegPath~$P$ containing $r$ (otherwise).
+  All we have to do is to check $G - r$ or $G - P$ for 2-edge-connectivity, which can be done in $O(n+m)$ time.
+\end{proof}
+
+In the rest of this section,
+we focus on MinRSs that do not contain the root of the DFS-tree.
+% Before going into details,
+% leaf, and \maxTwoDegPathの章で議論を簡単にするために
+% rootをふくない pathなどの性質を述べる
+Before going into details,
+we show a basic property of \maxTwoDegPaths not containing the root of the DFS-tree
+for the sake of simplifying discussions in the following sections.
+\begin{lem}
+  \label{lem:max2degpath_props}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$, and
+  Let $P = v_1 \to v_2 \to \cdots \to v_k$
+  be a \maxTwoDegPath in $G$ that does not contain $r$.
+  Then, the following hold:
+  \begin{enumerate}[label={\rm(\roman*)}]
+  \item
+  No internal vertex of $T$
+  that is an endopoint of any back edge
+  appears in $P$; and
+  \item The sequence $v_1, v_2, \ldots, v_k$ appears in this order or its reverse order
+  on a root-to-leaf path in $T$.
+  \item % P に Tのleaf が現れるなら, それは v1 か vk であり、一方のみである
+  If $P$ contains a leaf of $T$,
+  then it is either $v_1$ or $v_k$, but not both.
+  \end{enumerate}
+\end{lem}
+\begin{proof}
+  (i)
+  Since every internal vertex of $T$ has the parent and at least one child,
+  if an internal vertex of $T$ is an endopoint of some back edge,
+  then the degree in $G$ is at least three.
+  Thus, such a vertex cannot appear in $P$.
+  \newline
+  (ii)
+  In the DFS traversal that constructs $T$,
+  the vertices in $P$ are visited one by one
+  without visiting any other vertex in between.
+  % \newline
+  (iii) is immediate from (ii).
+\end{proof}
+
+\subsection{MinRSs Containing DFS-Tree Leaf}
 \label{sec:leaf_mrs}
 In this section, we consider MinRSs that consist of only leaves of a DFS-tree.
 
@@ -785,20 +966,18 @@ of a 2-edge-connected undirected graph.
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$
   and
   $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  Any leaf of $T$ is not an articulation point of $G$.
+  % Any leaf of $T$ is not an articulation point of $G$.
+  % leaf or Max2degpath containing leaf は 削除しても連結性を保つ
+  For any leaf $v\in V$ of $T$ or any \maxTwoDegPath~$P$ containing a leaf of $T$,
+  $G - v$ or $G - P$ is connected.
 \end{lem}
 \begin{proof}
   Since $T$ is a spanning tree of $G$,
   every path in $T$ also exists in $G$.
-  For any leaf $v\in V$ of $T$,
-  $T - v$ is connected.
-  Thus, $G - v$ is also connected,
-  which means that $v$ is not an articulation point of $G$.
+  For any leaf $v\in V$ of $T$ or any \maxTwoDegPath~$P$ containing a leaf of $T$,
+  $T - v$ or $T - P$ is connected.
+  Thus, $G - v$ or $G - P$ is also connected.
 \end{proof}
-
-
-%
-
 
 % \begin{lem}
 %   \label{lem:leaf_mrs}
@@ -858,237 +1037,361 @@ of a 2-edge-connected undirected graph.
   \label{lem:leaf_mrs}
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$ and
   $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  Let $x$ be a leaf of $T$ %that has back edges
-  and $y :=\lbeTarget(x)$.
-  Then, $\{x\}$ is a MinRS of $G$ if and only if,
-  for any tree edge $(u,v)$ on the $y$--$\pi(x)$ path in $T$,
-  there exists a back edge outgoing from some vertex in $T_v - x$
-  that covers $(u,v)$. 
+  Let $S \subsetneq V$ be 
+  a nonempty proper subset of $V$ that
+  is either a singleton consisting of a leaf of $T$
+  or a \maxTwoDegPath containing a leaf of $T$;
+  let $x$ denote the leaf of $T$ in $S$ and
+  $a$ denote the other endpoint of $S$.
+  Note that $a = x$ if $S$ is a singleton.
+  Then, $S$ is a MinRS of $G$ if and only if,
+  for any tree edge $(u,v)$ with $v \not\in S$,
+  there exists a back edge outgoing from some vertex in $\diffset{V}{S}$
+  that covers $(u,v)$.  
 \end{lem}
 \begin{proof}
+  By \lemref{max2degpath_props},
+  $S$ contains exactly one leaf of $T$ and
+  $S$ appears as a path from some vertex~$a$ to its descendant~$x$ in $T$.
+  (If $S$ is a singleton, then $a = x$.)
+  By the definition of $S$, $x$ is a leaf of $T$.
+  Since $G$ is 2-edge-connected,
+  every tree edge is covered by at least one back edge.
+  Thus, it suffices to consider only tree edges on the $y$--$\pi(a)$ path in $T$,
+  where $y$ is the most distant proper ancestor of $x$
+  adjacent to $x$ by a back edge.
+  \newline
   ($\Longrightarrow$)
   We show by contraposition.
-  Suppose that there exists a tree edge $(u,v)$ on the $y$--$\pi(x)$ path in $T$
-  that is not covered by any back edge outgoing from a vertex  other than $x$.
-  Any vertex in $T_v - x$ cannot have a back edge to
-  a proper ancestor of $u$ in $G - x$,
-  which means that $uv$ is a bridge in $G - x$.
-  Thus, $G - x$ is not 2-edge-connected.
-
-  % \medskip
+  Suppose that there exists a tree edge $(u,v)$ on the $y$--$\pi(a)$ path in $T$
+  that is not covered by any back edge outgoing from a vertex  other than those in $S$.
+  Any vertex in $T_v - S$ cannot have a back edge to
+  a proper ancestor of $u$ in $G - S$,
+  which means that $uv$ is a bridge in $G - S$.
+  \newline
   ($\Longleftarrow$)
-  It suffices to show that $G - x$ is 2-edge-connected.
+  By \lemref{mrs_cond},
+  it suffices to show that $G - S$ is 2-edge-connected.
   By \lemref{leaf_not_ap},
-  $G - x$ is connected.
-  We show that there is no bridge in $G - x$.
-  Every back edge $(x', y') \in E \setminus E(T)$
-  with $x', y' \neq x$ is not a bridge in $G - x$,
-  since $x'y'$ and the $y'$--$x'$ path in $T$ form a cycle in $G - x$.
-  Next, we consider tree edges in $G - x$.
-  For any tree edge not on the $y$--$\pi(x)$-path in $T$,
-  no covering back edge disappears by removing $x$ from $G$,
-  % still exists in $G - x$,
-  which means that such a tree edge is not a bridge in $G - x$.
-  For any tree edge $(u, v)$ on the $y$--$\pi(x)$-path in $T$,
+  $G - S$ is connected.
+  We show that there is no bridge in $G - S$.
+  Every back edge $(x', y') \in \diffset{E}{E(T)}$
+  with $x', y' \not\in S$ is not a bridge in $G - S$,
+  since $x'y'$ and the $y'$--$x'$ path in $T$ form a cycle in $G - S$.
+  Next, we consider tree edges in $G - S$.
+  For any tree edge not on the $y$--$\pi(a)$-path in $T$,
+  no covering back edge disappears by removing $S$ from $G$,
+  % still exists in $G - S$,
+  which means that such a tree edge is not a bridge in $G - S$.
+  For any tree edge $(u, v)$ on the $y$--$\pi(a)$-path in $T$,
   by the assumption,
-  there exists a back edge outgoing from a vertex in $T_v - x$
+  there exists a back edge outgoing from a vertex in $T_v - S$
   that covers $(u,v)$,
-  which means that such a tree edge is not a bridge in $G - x$.
-  Thus, there is no bridge in $G - x$,
-  and hence, $G - x$ is 2-edge-connected.
+  which means that such a tree edge is not a bridge in $G - S$.
+  Thus, there is no bridge in $G - S$,
+  and hence, $G - S$ is 2-edge-connected.
 \end{proof}
 
 
-Here, we introduce the \emph{source-exclusive coverage set}~$\SrcExc_v$ of each vertex $v \in V$,
-defined to be the set of tree edge $e$ in $T$ such that
-$\CovSrc(e) = 1$ and $e$ is covered by
-only back edges outgoing from $v$.
-Or equivalently,
-if $e \in \SrcExc_v$,
-then $e$ is covered by back edges outgoing from $v$,
-and no back edge outgoing from any other vertex covers $e$.
-Any tree edge in $\SrcExc_v$ must be on the $\lbeTarget(v)$--$\pi(v)$ path in $T$.
+% Here, we introduce the \emph{source-exclusive coverage set}~$\SrcExc_v$ of each vertex $v \in V$,
+% defined to be the set of tree edge $e$ in $T$ such that
+% $\CovSrc(e) = 1$ and $e$ is covered by
+% only back edges outgoing from $v$.
+% Or equivalently,
+% if $e \in \SrcExc_v$,
+% then $e$ is covered by back edges outgoing from $v$,
+% and no back edge outgoing from any other vertex covers $e$.
+% Any tree edge in $\SrcExc_v$ must be on the $\lbeTarget(v)$--$\pi(v)$ path in $T$.
 
-By \lemref{leaf_mrs},
-$\{x\}$ is a MinRS of $G$ if and only if $\SrcExc_x = \{\pi(x)x\}$.
-Thus, in order to find all MinRSs consisting of only leaves of $T$,
-it suffices to compute $\SrcExc_v$ for each leaf $v$ of $T$.
-This can be done by the Algorithm~\ref{alg:treeedge_to_backedge}
-that traverses $T$ in a depth-first manner
-and collects tree edges with cover-source multiplicity 1
-covered by back edges outgoing from each leaf.
-Before describing the algorithm,
-there are some lemmas to show its correctness.
+% By \lemref{leaf_mrs},
+% $S$ is a MinRS of $G$ if and only if,
+% tree edges (u,v) with v notin S
+% covering back edge (x1,y1), (x2,y2), ..., (xk,yk)
+% → x1 != x or x2 != x or ... or xk != x
+Let $S \subsetneq V$ be 
+a nonempty proper subset of $V$ that
+is either a singleton consisting of a leaf of $T$
+or a \maxTwoDegPath containing a leaf of $T$;
+let $x$ denote the leaf of $T$.
+Since $x$ is the only vertex in $S$ that has back edges outgoing from it, then by \lemref{leaf_mrs},
+$S$ is a MinRS of $G$ if and only if,
+for any tree edge $(u,v)$ with $v \not\in S$,
+there exists a back edge outgoing from other vertex than $x$
+that covers $(u,v)$.
 
-\begin{lem}
-  \label{lem:leaf_longest_backedge_coverage}
-  Let $G=(V,E)$ be a 2-edge-connected undirected graph and
-  $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  Let $l$ be a leaf of $T$ and
-  $v \neq r$ be an ancestor of $l$ in $T$.
-  The tree edge $\pi(v)v$ is covered by the longest back edge $\lbe(l)$ outgoing from $l$
-  if and only if $\mathit{dfsId}(\lbeTarget(l)) < \mathit{dfsId}(v)$.
-\end{lem}
-\begin{proof}
-  Let $y := \lbeTarget(l)$.
-  Since both $y$ and $v$ are on the unique $\pi(l)$--$r$ path in $T$,
-  $y$ is an ancestor or a descendant of $v$.
-  We have $\mathit{dfsId}(y) < \mathit{dfsId}(v)$
-  if and only if $y$ is a proper ancestor of $v$.
-  By the definition of coverage,
-  $\pi(v)v$ is covered by $\lbe(l)$
-  if and only if $y$ is a proper ancestor of $v$.
-\end{proof}
 
-\begin{lem}
-  \label{lem:leaves_longest_backedge_coverage}
-  Let $G=(V,E)$ be a 2-edge-connected undirected graph and
-  $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  Let $l, l'$ be distinct leaves of $T$ and
-  $v \neq r$ be a common ancestor of $l$ and $l'$ in $T$.
-  We assume that $\mathit{dfsId}(\lbeTarget(l)) \geq \mathit{dfsId}(\lbeTarget(l'))$.
-  If a tree edge $\pi(v)v$ is covered by the longest back edge $\lbe(l)$ outgoing from $l$,
-  then $\pi(v)v$ is also covered by the longest back edge $\lbe(l')$ outgoing from $l'$.
-\end{lem}
-\begin{proof}
-  By \lemref{leaf_longest_backedge_coverage},
-  since $\pi(v)v$ is covered by $\lbe(l)$,
-  we have $\mathit{dfsId}(\lbeTarget(l)) < \mathit{dfsId}(v)$.
-  By the assumption,
-  $\mathit{dfsId}(\lbeTarget(l')) \leq \mathit{dfsId}(\lbeTarget(l)) < \mathit{dfsId}(v)$ holds.
-  By \lemref{leaf_longest_backedge_coverage} again,
-  $\pi(v)v$ is also covered by $\lbe(l')$.
-\end{proof}
-
-We are now ready to describe Algorithm~\ref{alg:treeedge_to_backedge}
-that computes $\SrcExc_v$ for each leaf $v$ of $T$.
-
-% ALGO
+% 次のような流れでアルゴリズムを構成する:
+  % 前計算 として, 各 tree edge について CovDesc1, CovDesc2 を計算する (O(n+m) 時間)
+  % 各 tree edge について, CovDesc1, CovDesc2から $\{x' \in V \mid \text{There is back edge $(x', y')$ covering $(u,v)$} \}$ を求め, 葉シングルトンであれば、その葉 に tree edge へのリンクを貼る O(n) 時間
+  % 各候補S (葉x) について x に結びついている tree edgeの中で 端点がどちらもSには入らないものがあれば MinRS でない; 全て 端点のうち少なくとも一方がSに入るなら MinRS である O(n) 時間
 \begin{algorithm}[t]
-  \caption{Computation of source-exclusive coverage set for each leaf}
-  \label{alg:treeedge_to_backedge}
+  \caption{Computation of All MinRSs Containing a Leaf of a DFS-tree}
+  \label{alg:leaf_mrs}
   \begin{algorithmic}[1]
-    \Require A 2-edge-connected undirected graph $G=(V,E)$,
-    DFS-tree $T$ of $G$ rooted at $r \in V$, and
-    the cover-source multiplicities $\CovSrc$ for all tree edges in $T$
-    \Ensure The source-exclusive coverage sets $\SrcExc_v$ for all leaves $v$ of $T$
-    \State \Initialise $\SrcExc_v := \emptyset$ for all leaves $v$ of $T$;
-    \For{\textbf{each} child $w$ of the root $r$ in $T$}
-      \State Execute \Call{TreeEdgeToBackEdge}{$w$}
+    \Require A 2-edge-connected undirected graph $G=(V,E)$
+    and its DFS-tree $T$ rooted at $r \in V$
+    \Ensure All MinRSs of $G$ containing a leaf of $T$
+    \State Compute $\CovDesc{1}$ and $\CovDesc{2}$
+      for all tree edges;\label{codeline:preproc_covdesc}
+    \State \Initialise $\mathit{covering\_sets}_l := {}$ an array from leaves $l$ of $T$ to sets of tree edges;
+    \For{\textbf{each} tree edge $(u,v)$ in $E(T)$}
+      \State Compute the set
+      $X_{uv} :=
+      \{
+      x' \in V \mid
+        \text{There is back edge $(x', y')$ covering $(u,v)$}
+      \}
+      $from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
+      \State Append $(u,v)$ to $\mathit{covering\_sets}_l$ \textbf{if} $X_{uv}$ is a singleton $\{l\}$ and $l$ is a leaf of $T$;
+      % \If{$X_{uv}$ is a singleton $\{x\}$ and $x$ is a leaf of $T$}
+      %     \State Append $(u,v)$ to $\mathit{covering\_sets}_x$
+      % \EndIf
+    \EndFor;\label{codeline:build_leaf_links}
+    \State \Initialise $\MY := {}$ an empty set;
+    \For{\textbf{each} leaf $l$ of $T$}
+      \State $S := \begin{cases}
+      \{l\} & \text{if } \deg_G(l) \geq 3 \\
+      \text{the vertex set of the \maxTwoDegPath containing $l$} & \text{otherwise}
+      \end{cases}$;
+      \State $\mathit{is\_MinRS} := \True$;
+      \For{\textbf{each} tree edge $(u,v)$ in $\mathit{covering\_sets}_l$}
+        \State $\mathit{is\_MinRS} := \False$ \textbf{if} $u \not\in S$ and $v \not\in S$;
+        \Comment{You can break the loop here}
+        % \If{$u \not\in S$ and $v \not\in S$}
+        %   \State $\mathit{is\_MinRS} := \False$
+        %   \Comment{You can break the loop here}
+        % \EndIf
+      \EndFor;
+      \State $\cupappend{\MY}{\{S\}}$ \textbf{if} $\mathit{is\_MinRS}$;
     \EndFor;
-    \State \textbf{output} $\SrcExc_v$ for all leaves $v$ of $T$
-    \State
-
-
-    \Procedure{TreeEdgeToBackEdge}{$v$}
-    % \State $l := \Nil$;
-    % \If{$v$ is a leaf}
-    %   \State $l := v$
-    % \EndIf;
-    \State $l := \begin{cases}
-      v & \text{if } v \text{ is a leaf} \\
-      \Nil & \text{otherwise}
-    \end{cases}$;
-    \For{\textbf{each} child $w$ of $v$ in $T$}
-      \State Execute \Call{TreeEdgeToBackEdge}{$w$};
-      \State Let $l'$ be the returned leaf;
-      \If{$l' \neq \Nil$ and [$l = \Nil$ or $ \mathit{dfsId}(\lbeTarget(l')) < \mathit{dfsId}(\lbeTarget(l))$]}
-      \label{codeline:update_l}
-        \State $l := l'$
-      \EndIf
-    \EndFor;
-    \If{$l \neq \Nil$ and $\mathit{dfsId}(\lbeTarget(l)) \geq \mathit{dfsId}(v)$}\label{codeline:check_l}
-    \State $l := \Nil$
-    \EndIf;
-    
-    \State $\SrcExc_l := \SrcExc_l \cup \{\pi(v)v\}$ \textbf{if} $\CovSrc(\pi(v)v) = 1$ and $l \neq \Nil$;
-    \State \textbf{return} $l$
-    \EndProcedure
+    \State \textbf{output} $\MY$
   \end{algorithmic}
 \end{algorithm}
-
-\begin{lem}
-  \label{lem:treeedge_to_backedge}
-  Given a 2-edge-connected undirected graph $G=(V,E)$
-  with $n=|V| \geq 3$ and $m=|E|$,
-  its DFS-tree $T$ rooted at $r \in V$, and 
-  the cover-source multiplicities $\CovSrc$ for all tree edges in $T$,
-  Algorithm~\ref{alg:treeedge_to_backedge} computes $\SrcExc_v$
-  for each leaf $v$ of $T$
-  in $O(n)$ time.
-\end{lem}
-\begin{proof}
-  (Correctness)
-  We first show that the case with $v$ being a leaf.
-  In this case, since there is no child of $v$ in $T$,
-  the algorithm returns $l = v$.
-  Moreover, $\pi(l)l$ is clearly covered by $\lbe(l)$ and
-  no longest back edge outgoing from other leaf covers $\pi(l)l$.
-  This means that, if $\CovSrc(\pi(l)l) = 1$,
-  then $\pi(l)l \in \SrcExc_l$ holds.
-
-  Next, we consider the case other than the leaf case. 
-  We assume that, for any child $w$ of $v$ in $T$,
-  \Call{TreeEdgeToBackEdge}{$w$} correctly computes
-  a leaf $l'$ such that
-  every tree edge in $\SrcExc_{l'}$ is covered by $\lbe(l')$
-  and no longest back edge outgoing from other leaf covers such tree edges.
-  By \lemref{leaves_longest_backedge_coverage},
-  we need to consider only the leaf $l'$ with the smallest
-  $\mathit{dfsId}(\lbeTarget(l'))$ among such leaves $l'$ returned from children of $v$.
-  The algorithm correctly selects such a leaf $l$ (line \ref{codeline:update_l}).
-  If $\mathit{dfsId}(\lbeTarget(l)) \geq \mathit{dfsId}(v)$,
-  then, by \lemref{leaf_longest_backedge_coverage},
-  no longest back edge outgoing from $l$ covers $\pi(v)v$,
-  and hence, we set $l := \Nil$ (line \ref{codeline:check_l}).
-  Then, if $l \neq \Nil$, then
-  the tree edge $\pi(v)v$ is covered by $\lbe(l)$.
-  Therefore, if $\CovSrc(\pi(v)v) = 1$ and $l \neq \Nil$,
-  then we can insert $\pi(v)v$ into $\SrcExc_l$.
-
-  (Time complexity)
-  We visit each vertex exactly once,
-  and consider all tree edges exactly once,
-  which means we can compute $\SrcExc_v$ for all leaves $v$ of $T$.
-  Since we traverse only tree edges in $T$,
-  we can execute the algorithm in $O(n)$ time.
-\end{proof}
+  
 
 \begin{thm}
   \label{thm:leaf_mrs}
   Given a 2-edge-connected undirected graph $G=(V,E)$
   with $n=|V|$ and $m=|E|$,
-  we can compute all MinRSs consisting of only leaves of a DFS-tree $T$
+  \algoref{leaf_mrs} computes all MinRSs of $G$ containing a leaf of a DFS-tree $T$
   in $O(n+m)$ time.
+  % we can compute all MinRSs containing a leaf of a DFS-tree $T$
+  % in $O(n+m)$ time.
 \end{thm}
 \begin{proof}
-  % Note that we asuume that a graph is simple throughout this paper.
   Note that we assume that a graph has no parallel edges throughout this paper.
   If $|V| < 3$, i.e., $G$ consists of only one vertex,
   then $G$ has no MinRS.
   Thus, we assume that $|V| \geq 3$.
   As the given graph is 2-edge-connected,
   each tree edge is covered by at least one back edge.
-  By \lemref{leaf_mrs}, $\{v\}$ is a MinRS of $G$ if and only if
-  for any tree edge is covered by back edges outgoing from vertices other than $v$,
-  which means that $\CovSrc(e) \geq 2$.
-  Thus, we can check whether $\{v\}$ is a MinRS of $G$
-  by checking whether $\SrcExc_v$ is equal to $\{\pi(v)v\}$ ot not.
+  Let $S \subsetneq V$ be 
+  a nonempty proper subset of $V$ that
+  is either a singleton consisting of a leaf of $T$
+  or a \maxTwoDegPath containing a leaf of $T$;
+  let $x$ denote the leaf of $T$ in $S$.
+  By the discussion before the theorem,
+  $S$ is a MinRS of $G$ if and only if,
+  for any tree edge $(u,v)$ with $v \not\in S$,
+  there exists a back edge outgoing from other vertex than $x$
+  that covers $(u,v)$;
+  which is equivalent to that
+  for any tree edge $(u,v)$ with $v \not\in S$,
+  $X_{uv}=\{x' \in V \mid \text{There is back edge $(x', y')$ covering $(u,v)$} \} \neq \{x\}$ holds.
   By \lemref{cov_info_agg},
-  we can compute the cover-source multiplicities for all tree edges
-  in $O(n+m)$ time.
-  By \lemref{treeedge_to_backedge},
-  we can compute the sets $\SrcExc_v$ for all leaves $v$ of $T$
-  in $O(n)$ time.
-  Thus, we can compute all MinRSs consisting of only leaves of $T$
-  in $O(n+m)$ time.
+  we can compute the weighted cover information
+  $\CovDesc{1}$ and $\CovDesc{2}$
+  for all tree edges.
+
+  By \lemref{cov_info_agg},
+  we can compute $\CovDesc{1}$ and $\CovDesc{2}$
+  for all tree edges in $O(n+m)$ time.
+  For each tree edge $(u,v)$,
+  we can compute the set
+  $X_{uv}$ from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$
+  in constant time.
+  For each leaf $l$ of $T$,
+  we can check whether $S$ is a MinRS of $G$
+  in time proportional to the size of $\mathit{covering\_sets}_l$.
+  Since the total size of $\mathit{covering\_sets}_l$
+  for all leaves $l$ of $T$ is at most $O(n)$,
+  we can check all candidates $S$ in $O(n)$ time.
+  Thus, the total time complexity is $O(n+m)$.
 \end{proof}
 
-\subsection{Link MinRSs}
-\label{sec:link_mrs}
-TODO
+% Max2deg Path MinRSs but all vertices are internal vertices of DFS-tree
+\subsection{\MaxTwoDegPathCap MinRSs but all Internal Vertices}
+\label{sec:max2deg_pathcap_mrs}
+In this section, we consider MinRSs that consist of only internal vertices of a DFS-tree
+and form a \maxTwoDegPath in $G$.
+% In order to simplify discussions,
+% we introduce the `suppression' for \maxTwoDegPaths.
+% %そのために a != b であることを示す
 
-\subsection{Single Vertex Degree at Least 3 MinRSs}
+% 議論を簡単にするために, max2degpath の suppression を導入する
+% そのために, a != b であることを示す
+To simplify discussions,
+we introduce the \emph{suppression} for \maxTwoDegPaths.
+First, we show that the two \neighbours of the endpoints of a \maxTwoDegPath
+not containing the root or any leaf of a DFS-tree are distinct.
+\begin{lem}
+  \label{lem:suppression_valid}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
+  and $P$ be a \maxTwoDegPath in $G$ that does not contain the root or any leaf of a DFS-tree $T$ of $G$.
+  Then, $|N_G(V(P))| = 2$ holds.
+\end{lem}
+\begin{proof}
+  Let $P = v_1 \to v_2 \to \cdots \to v_k$,
+  and let $a, b$ denote the \neighbours of $v_1$ and $v_k$ not on $P$ if $P$ is not a singleton;
+  if $P$ is a singleton, then let $a$ and $b$ denote the two \neighbours of the only vertex in $P$.
+  We show that $a \neq b$ holds.
+  By \lemref{max2degpath_props}(ii), 
+  $P$ appears as the $v_1$--$v_k$ path in $T$,
+  and without loss of generality,
+  we assume that $v_1$ is an ancestor of $v_k$ in $T$.
+  The DFS traversal visits in order $a, v_1, v_2, \ldots, v_k$.
+  If $a = b$, then
+  $v_k b$ is a back edge,
+  which means that $b$ would be a leaf of $T$
+  since $v_k$ has degree 2 and $b$ is its only neighbour other than $v_{k-1}$.
+  This contradicts the assumption that $P$ does not contain any leaf of $T$.
+\end{proof}
+
+We fix a \maxTwoDegPath~$P = v_1 \to v_2 \to \cdots \to v_k$ in $G$, and let $\{a, b\} = N_G(V(P))$,
+where $a \neq b$ holds by \lemref{suppression_valid}.
+We define the \emph{suppression} of $P$
+to be the graph $G_P$ obtained from $G$ by
+removing all vertices of $P$
+and adding a new edge $e_P=ab$,
+which means that the new edge $e_P$ is not a self-loop.
+Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if $G$ has no parallel edges.
+
+\begin{lem}
+  \label{lem:dfs_tree_suppression}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$,
+  and $P = v_1 \to v_2 \to \cdots \to v_k$ be a \maxTwoDegPath in $G$ that does not contain $r$ or any leaf of $T$;
+  let $a$ and $b$ denote the \neighbours of $v_1$ and $v_k$ not on $P$.
+  Then, $T_P$ is a DFS-tree of $G_P$ rooted at $r$,
+  where $T_P$ is the tree obtained from $T$ by surpressing $P$.
+  Moreover,
+  $e_P$ is a tree edge in $T_P$ and
+  $\CovMult(e_P)$ in $G_P$ equals any $\CovMult(uv)$ in $G$
+  for a tree edge $(u,v)$ on the $a$--$b$ path in $T$.
+\end{lem}
+\begin{proof}
+  Let $P = v_1 \to v_2 \to \cdots \to v_k$,
+  and let $a, b$ denote the \neighbours of $v_1$ and $v_k$ not on $P$.
+  By Lemmas~\ref{lem:max2degpath_props}(ii) and~\ref{lem:suppression_valid},
+  $P$ appears as the $v_1$--$v_k$ path in $T$,
+  and without loss of generality,
+  we assume that $v_1$ is an ancestor of $v_k$ in $T$.
+  In the DFS traversal that constructs $T$,
+  the vertices in order $a, v_1, v_2, \ldots, v_k, b$ are visited one by one
+  without visiting any other vertex in between.
+  For DFS traversal on $G_P$,
+  when we visit $a$,
+  we can directly visit $b$ via the new edge $e_P = ab$
+  without visiting any other vertex in between.
+  Thus, $T_P$ is a DFS-tree of $G_P$ rooted at $r$.
+  \newline
+  By the construction of $T_P$,
+  $e_P$ is a tree edge in $T_P$.
+  Next, we show that
+  $\CovMult(e_P)$ in $G_P$ equals any $\CovMult(uv)$ in $G$
+  for a tree edge $(u,v)$ on the $a$--$b$ path in $T$.
+  No vertex in $P$ is an endopoint of any back edge by \lemref{max2degpath_props}(i).
+  Thus, any back edge in $G$ corresponds to a back edge in $G_P$ and vice versa.
+  Moreover,
+  a back edge covers $e_P$ in $G_P$
+  if and only if it covers any tree edge $(u,v)$ on the $a$--$b$ path in $T$ in $G$.
+  Thus, the cover multiplicities are equal.
+\end{proof}
+
+\begin{lem}
+  \label{lem:2edgecut_covmult}
+  Let $G=(V,E)$ be a 2-edge-connected undirected (multi)graph with $|V|\geq 3$,
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$, and
+  $e=(u, v)$ be a tree edge in $T$.
+  Then, $e$ belongs to some 2-edge-cut if and only if
+  $\CovMult(e) = 1$ in $G$.
+  Moreover, if $e$ belongs to some 2-edge-cut,
+  then there exists a unique tree edge $f \neq e$ such that
+  $E(V(T_v)) = \{e,f\}$ holds.
+\end{lem}
+\begin{proof}
+  Let $X := V(T_v)$.
+  ($\Longrightarrow$)
+  Let $\{e, f\}$ be a 2-edge-cut containing $e$ for some tree edge $f \neq e$.
+  In $G - e$,
+  $X$ and $\diffset{V}{X}$ are connected separately.
+  Since $G - \{e, f\}$ is disconnected,
+  the connected components of $G - \{e, f\}$ are exactly $X$ and $\diffset{V}{X}$.
+  Thus, $f$ is the only back edge covering $e$ in $G$,
+  which means that $\CovMult(e) = 1$.
+  \newline
+  ($\Longleftarrow$)
+  Suppose that $\CovMult(e) = 1$.
+  Let $f$ be the unique back edge covering $e$ in $G$.
+  In $G - e$,
+  $X$ and $\diffset{V}{X}$ are connected separately.
+  Since $f$ is the only back edge covering $e$,
+  $G - \{e, f\}$ is disconnected.
+  Thus, $\{e, f\}$ is a 2-edge-cut containing $e$.
+  \newline
+  Moreover,
+  if $e$ belongs to some 2-edge-cut,
+  then the above argument shows that
+  there exists a unique tree edge $f \neq e$ such that
+  $E(V(T_v)) = \{e,f\}$ holds.
+\end{proof}
+
+
+
+\begin{lem}
+  \label{lem:max2degpath_mrs}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$,
+  and $P$ be a \maxTwoDegPath in $G$ that does not contain $r$ or any leaf of $T$.
+  The following are equivalent:
+  \begin{enumerate}[label={\rm(\roman*)}]
+    \item $P$ is a MinRS of $G$;
+    \item $G_P - e_P$ is 2-edge-connected; and
+    \item $\CovMult(e_P) \geq 2$ in $G_P$.
+  \end{enumerate}
+\end{lem}
+\begin{proof}
+  The equivalence between
+  (i) and (ii) is immediate from the definition of MinRSs
+  and the construction of $G_P$.
+  \newline
+  (ii) $\iff$ $G_P - e_P$ has no bridge $\iff$
+  $G_P$ has no 2-edge-cut containing $e_P$
+  $\iff$ (iii),
+  where the last equivalence follows by \lemref{2edgecut_covmult}.
+TODO
+\end{proof}
+
+\begin{thm}
+  \label{thm:max2degpath_mrs}
+  Given a 2-edge-connected undirected graph $G=(V,E)$
+  with $n=|V|$ and $m=|E|$,
+  and its DFS-tree $T$ rooted at $r \in V$,
+  we can compute all MinRSs of $G$ consisting of only internal vertices of $T$
+  that form a \maxTwoDegPath in $G$
+  in $O(n+m)$ time.
+\end{thm}
+\begin{proof}
+  Let $P$ be a \maxTwoDegPath in $G$ that does not contain $r$ or any leaf of $T$
+  and $v$ denote the vertex in $P$ closest to $r$ in $T$.
+  By Lemmas~\ref{lem:dfs_tree_suppression} and~\ref{lem:max2degpath_mrs},
+  we can determine whether $P$ is a MinRS of $G$
+  by checking whether $\CovMult(pi(v)v) \geq 2$ in $G_P$.
+  By \lemref{cov_info_agg},
+  we can compute the cover multiplicities for all tree edges in $O(n+m)$ time.
+\end{proof}
+
+\subsection{Single Internal Vertex Degree At Least 3 MinRSs}
 \label{sec:single_vertex_deg3_mrs}
 TODO
 
@@ -1099,6 +1402,15 @@ TODO
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \clearpage
 % \input{unused_lemmas.tex}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\bibliographystyle{plainurl}
+\bibliography{ref}
+% \nocite{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Appendix if any %%%%%
 
 \end{document}
 
