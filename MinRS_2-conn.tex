@@ -447,17 +447,17 @@ on weighted cover information.
 \subsection{Difference-Based Aggregation on a Rooted Tree}
 \label{sec:diff_agg}
 Let $T$ be a rooted tree.
-Each tree edge $e$ stores a value, say $A(e)$
+Each edge $e$ stores a value, say $A(e)$
 (from $\mathbb{Z}$, $\mathbb{R}$,
 or, more generally, from an additive abelian group),
 and update operations add a constant value
-to all tree edges on a specified
+to all edges on a specified
 ancestor--descendant path in $T$.
 
 Formally, update operations are specified by triples $(x, y,\alpha)$,
 where $y$ is an ancestor of $x$ in $T$,
-and $\alpha$ is a value to be added to all tree edges.
-The goal is to compute the final value stored in each tree edge
+and $\alpha$ is a value to be added to all edges on the $x$--$y$ path.
+The goal is to compute the final value stored in each edge
 after performing a sequence of such update operations.
 
 In order to achieve this goal efficiently,
@@ -475,10 +475,10 @@ we perform:
 \begin{lem}
   \label{lem:diff_agg}
   Let $T$ be a rooted tree and
-  each tree edge $e$ store an initial value $A(e)$.
+  each edge $e$ store an initial value $A(e)$.
   After performing a sequence of update operations
   represented as triples $(x,y,\alpha)$ on a rooted tree $T$,
-  for each tree edge $\pi(v)v$, 
+  for each edge $\pi(v)v$, 
   the updated value is given by
   \[
   A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w).
@@ -513,9 +513,9 @@ we perform:
   \label{alg:diff_agg}
   \begin{algorithmic}[1]
     \Require A rooted tree $T$,
-    an initial value $A(e)$ for all tree edges $e$ in $E(T)$,
+    an initial value $A(e)$ for all edges $e$ in $E(T)$,
     and a sequence of update operations $(x,y,\alpha)$
-    \Ensure The final values for all tree edges
+    \Ensure The final values for all edges
     % % \State \Initialise $\Delta(v) := 0$ and $A(e) := 0$
     % for all $v \in V(T)$ and $e \in E(T)$;
     \State \Initialise $\Delta(v) := 0$ for all $v \in V(T)$ and $\mathit{value}(e) := A(e)$ for all $e \in E(T)$;
@@ -526,7 +526,7 @@ we perform:
     \For{\textbf{each} child $w$ of the root $r$ in $T$}
       \State Execute \Call{Aggregate-DFS}{$w$}
     \EndFor;
-    \State \textbf{output} $\mathit{value}(e)$ for all tree edges $e$ in $E(T)$
+    \State \textbf{output} $\mathit{value}(e)$ for all edges $e$ in $E(T)$
 
     \\\Procedure{Aggregate-DFS}{$v$}
     \State $\plusassign{\mathit{value}(\pi(v)v)}{\Delta(v)}$;
@@ -543,7 +543,7 @@ we perform:
   Given a rooted tree $T$ with $n$ vertices
   and a sequence of $q$ update operations,
   \algoref{diff_agg} computes the final values
-  for all tree edges in $O(q+n)$ time.
+  for all edges in $O(q+n)$ time.
 \end{lem}
 \begin{proof}
   By \lemref{diff_agg},
@@ -552,7 +552,7 @@ we perform:
   $
   A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w).
   $
-  for each tree edge $\pi(v)v$.
+  for each edge $\pi(v)v$.
   % the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
 
   We first show the case with $v$ being a leaf.
@@ -575,9 +575,9 @@ we perform:
   Since each update operation is processed in constant time,
   the total time for all $q$ update operations is $O(q)$.
   We visit each vertex exactly once,
-  and consider all tree edges exactly once,
-  which means we can correctly compute the final values for all tree edges.
-  Since we traverse only tree edges in $T$,
+  and consider all edges exactly once,
+  which means we can correctly compute the final values for all edges.
+  Since we traverse only edges in $T$,
   we can execute the aggregation in $O(n)$ time.
 \end{proof}
 
@@ -1153,9 +1153,9 @@ that covers $(u,v)$.
       \{l\} & \text{if } \deg_G(l) \geq 3 \\
       \text{the vertex set of the \maxTwoDegPath containing $l$} & \text{otherwise}
       \end{cases}$;
-      \State $\mathit{is\_MinRS} := \True$;
+      \State $\textsc{is-MinRS} := \True$;
       \For{\textbf{each} tree edge $(u,v)$ in $\mathit{covering\_sets}_l$}
-        \State $\mathit{is\_MinRS} := \False$ \textbf{if} $u \not\in S$ and $v \not\in S$;
+        \State $\textsc{is-MinRS} := \False$ \textbf{if} $u \not\in S$ and $v \not\in S$;
         \Comment{You can break the loop here}
         % \If{$u \not\in S$ and $v \not\in S$}
         %   \State $\mathit{is\_MinRS} := \False$
