@@ -1343,7 +1343,7 @@ Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if
   if $e$ belongs to some 2-edge-cut,
   then the above argument shows that
   there exists a unique tree edge $f \neq e$ such that
-  $E(V(T_v)) = \{e,f\}$ holds.
+  $E_G(V(T_v)) = \{e,f\}$ holds.
 \end{proof}
 
 
@@ -1386,13 +1386,33 @@ TODO
   and $v$ denote the vertex in $P$ closest to $r$ in $T$.
   By Lemmas~\ref{lem:dfs_tree_suppression} and~\ref{lem:max2degpath_mrs},
   we can determine whether $P$ is a MinRS of $G$
-  by checking whether $\CovMult(pi(v)v) \geq 2$ in $G_P$.
+  by checking whether $\CovMult(\pi(v)v) \geq 2$ in $G_P$.
   By \lemref{cov_info_agg},
   we can compute the cover multiplicities for all tree edges in $O(n+m)$ time.
 \end{proof}
 
 \subsection{Single Internal Vertex Degree At Least 3 MinRSs}
 \label{sec:single_vertex_deg3_mrs}
+
+\begin{lem}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$ and $v \in V$.
+  The graph $G - v$ has a bridge $e$ if and only if
+  there exists $X \subsetneq \diffset{V}{\{v\}}$ such that
+  $E_G(X) = \{e\} \cup E_G(v, X)$. 
+\end{lem}
+\begin{proof}
+  ($\Longrightarrow$)
+  Let $X$ be the vertex set of a connected component of $(G - v) - e$, where $E_{G - v}(X) = \{e\}$ holds.
+  Since $G$ is connected,
+  all edges between $X$ and $\diffset{V}{X}$ in $G$ must be incident to $v$.
+  Thus, $E_G(X) = \{e\} \cup E_G(v, X)$ holds.
+  \newline
+  ($\Longleftarrow$)
+  Suppose that there exists $X \subsetneq \diffset{V}{\{v\}}$ such that $E_G(X) = \{e\} \cup E_G(v, X)$.
+  In $G - v$, all edges between $X$ and $\diffset{V}{X}$ are removed except for $e$.
+  Thus, $e$ is a bridge in $G - v$.
+\end{proof}
+
 TODO
 
 \subsection{Reuse of DFS-tree and Covering Information}
