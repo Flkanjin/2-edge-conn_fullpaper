@@ -76,6 +76,8 @@
 \algrenewcommand{\algorithmicrequire}{\textbf{Input: }}
 \algrenewcommand{\algorithmicensure}{\textbf{Output: }}
 
+\newcommand{\algoref}[1]{Algorithm~\ref{alg:#1}}
+
 \long\def\invis#1{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -115,6 +117,9 @@
 \newcommand{\CovSrc}{\mathit{CovSrcMult}}
 \newcommand{\SrcExc}{\mathit{SrcExc}}
 \newcommand{\Nil}{\textsc{Nil}\xspace}
+\newcommand{\id}{\mathit{id}}
+\newcommand{\CovDesc}[1]{\mathit{CovDesc}_{#1}}
+\newcommand{\CovAnc}[1]{\mathit{CovAnc}_{#1}}
 
 \usepackage[british,american]{babel}
 \newif\ifbritish
@@ -129,11 +134,13 @@
     #1%
   \else
     #2%
-  \fi\xspace
+  \fi\xspace%
 }
 
 \newcommand{\neighbour}[0]{\engvariation{neighbour}{neighbor}}
 \newcommand{\Neighbour}[0]{\MFUsentencecase{\neighbour}}
+\newcommand{\neighbours}[0]{{\neighbour}s\xspace}
+\newcommand{\Neighbours}[0]{\MFUsentencecase{\neighbours}}
 
 \newcommand{\initialise}[0]{\engvariation{initialise}{initialize}}
 \newcommand{\Initialise}[0]{\MFUsentencecase{\initialise}}
@@ -146,11 +153,14 @@
     #1%
   \else
     #2%
-  \fi\xspace
+  \fi\xspace%
 }
 
 \newcommand{\nonzero}{\hyphenvariation{non-zero}{nonzero}}
 \newcommand{\nonnegative}{\hyphenvariation{non-negative}{nonnegative}}
+
+\newcommand{\plusassign}[2]{#1 := #1 + #2}
+\newcommand{\minusassign}[2]{#1 := #1 - #2}
 
 
 
@@ -173,14 +183,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Preliminaries}
 \label{sec:prel}
+\subsection{Graphs}
+\label{sec:prel_graphs}
 Throughout the paper, we assume that a graph is simple and undirected.
 % We also assume that a \nonnegative integer $k$ is given. 
+We also assume that each vertex $v$ is associated with a fixed
+integer identifier $\id(v)$.
+These identifiers are given as part of the input graph
+and are preserved in all induced subgraphs.
 
 For a graph $G=(V,E)$ with a vertex set $V$
 and an edge set $E$,
 we may abbreviate an edge $\{u,v\} \in E$ as $uv$ (or equivalently $vu$)
 for simplicity.
-For a vertex $v \in V$, we denote by $N_G(v)$ the set of {\neighbour}s of $v$. 
+For a vertex $v \in V$, we denote by $N_G(v)$ the set of \neighbours of $v$. 
 For $S \subseteq V$, we denote by $G[S]$ the subgraph of $G$
 induced by $S$.
 We denote by $G-S$ the subgraph obtained by
@@ -189,7 +205,8 @@ that is, $G - S = G[V-S]$.
 If $S = \{v\}$,
 then we simply write $G-v$ instead of $G - \{v\}$.
 
-
+\subsection{DFS-Trees and Related Notions}
+\label{sec:prel_dfs}
 % DFS-Tree
 A \emph{DFS-tree} of a connected undirected graph~$G = (V,E)$
 is a spanning tree~$T$ obtained by performing a depth-first search (DFS) on $G$.
@@ -240,259 +257,522 @@ $
 \Cov(uv)=\{(x,y)\in E \mid (x,y)\ \text{is a back edge covering}\ uv\}
 $
 the set of back edges that cover $uv$.
-We refer to $\CovMult(uv) := |\Cov(uv)|$ as the \emph{cover multiplicity}
+We refer to $\CovMult(uv) \triangleq |\Cov(uv)|$ as the \emph{cover multiplicity}
 of the tree edge $uv$.
 Furthermore, we define the \emph{cover-source multiplicity} of $uv$ to be
 $
-\CovSrc(uv)=\bigl|\{x \in V(T_v) \mid \text{There is } y \text{ s.t. } (x,y)\in \Cov(uv)\}\bigr|,
+\CovSrc(uv)\triangleq \bigl|\{x \in V(T_v) \mid \text{There is } y \text{ s.t. } (x,y)\in \Cov(uv)\}\bigr|,
 $
 that is, the number of distinct descendants of $v$
 that serve as tails of back edges covering~$uv$.
+
+In addition to multiplicities,
+we also consider aggregated identifiers of endpoints of covering back edges.
+For a tree edge $uv$ and $i \in \{1, 2\}$, we define
+\[
+\CovDesc{i}(uv) \triangleq \sum_{(x,y) \in \Cov(uv)} \left(\id(x)\right)^i,
+\qquad
+\CovAnc{i}(uv) \triangleq \sum_{(x,y) \in \Cov(uv)} \left(\id(y)\right)^i.
+\]
+We refer to these quantities as \emph{weighted cover information}.
 
 % longest back edge outgoing from v
 For a vertex $x \in V$,
 every vertex~$y$ with a back edge $(x, y)$
 lies on the unique $\pi(x)$--$r$ path in $T$.
 Among such vertices~$y$,
-let $y^*$ be the one with the smallest DFS-index,
-that is, the one closest to the root $r$ in $T$.
+let  $y^*$ denote
+%  the one with the smallest DFS-index,
+% that is, 
+the one closest to the root $r$ in $T$.
 We call the back edge $x y^*$ the \emph{longest back edge outgoing from $x$}
 and denote it by $\lbe(x)$ and $y^*$ by $\lbeTarget(x)$.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Cover Information on DFS-Trees}
+\label{sec:cov_info}
+% In this section,
+% we study structural properties of cover information
+% and present an efficient algorithm
+% for computing various cover-related quantities.
+For later use,
+we present efficient algorithms
+for computing various cover-related quantities
+in this section.
+% In \secref{cov_info_struct},
+% we establish several structural properties of weighted cover information.
+% Although these properties are not immediate from the definitions,
+% they play a crucial role in the computation of MinRSs.
+%
+In \secref{diff_agg},
+we introduce a general technique, called \emph{difference-based aggregation},
+which efficiently supports path-based update operations on a rooted tree.
+%
+In \secref{cov_info_agg},
+we apply this technique to compute various cover-related quantities
+for all tree edges in a 2-edge-connected undirected graph
+in $O(n+m)$ time.
 
-\section{Computation of Cover multiplicities}
-\label{sec:cov_mult}
-In this section, we present an $O(n+m)$-time algorithm
-to compute the cover multiplicity and the cover-source multiplicity
-for all tree edges in a 2-edge-connected undirected graph $G=(V,E)$
-with $n=|V|$ and $m=|E|$.
+Before presenting the algorithms,
+we briefly illustrate how weighted cover information
+can be used to detect structural properties
+of covering back edges.
+%
+For a tree edge $uv$,
+we can determine whether all covering back edges
+outgo from the same descendant or
+ingo to the same ancestor
+using the weighted cover information.
 
-Since the two multiplicities can be computed in a similar manner,
-we here describe the algorithm for computing the cover multiplicities;
-the cover-source multiplicities can be computed with a minor modification
-as described at the end of this section.
-
-In this section, we assume that a DFS-tree $T$ of $G$,
-rooted at an arbitrary vertex $r \in V$, is already given.
-The algorithm consists of two phases.
-In the first phase, we process each back edge to update an auxiliary
-value called \emph{cover-delta value} associated with its endpoints.
-%(Algorithm~\ref{alg:preproc_backedge}).
-In the second phase, we traverse $T$ in a depth-first manner to aggregate these values
-along the tree and compute the multiplicity for each tree edge
-(Algorithm~\ref{alg:cov_mult}).
-% The details are described below.
-
-In order to compute the cover multiplicities,
-we define the \emph{cover-delta value} $\delta(v)$ for each vertex $v \in V$ as follows:
-\[
-\delta(v)
-:= \big| \{(v,y) \mid (v,y) \text{ is a back edge}\} \big| - \big| \{(x,v) \mid (x,v) \text{ is a back edge}\} \big|.
-\]
-Equivalently, 
-if we orient all back edges from descendants to ancestors as described in \secref{prel}
-and remove all tree edges,
-then $\delta(v)$ equals the outdegree minus the indegree of $v$ in the resulting directed graph.
-The cover-delta values satisfy a fundamental relation with the cover
-multiplicity, which we show below.
 
 \begin{lem}
-  \label{lem:delta_cov}
-  For any tree edge $(u,v)$ of $G$,
-  the cover multiplicity of $(u,v)$ is equal to the sum of
-  the cover-delta values for all vertices in $T_v$:
+  \label{lem:cov_info_use}
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph,
+  $T$ be a DFS-tree of $G$ rooted at $r \in V$,
+  and $uv$ be a tree edge in $T$.
+  Moreover,
+  let $\Cov(uv) = \{(x_1,y_1), \dots, (x_q,y_q)\}$ be the set of back edges covering $uv$,
+  where $q = \CovMult(uv)$.
+  Then, the following two conditions hold:
+  \begin{itemize}
+  \item $x_1 = x_2 = \cdots = x_q$ if and only if
+    $\left(\CovDesc{1}(uv)\right)^2 = q \cdot \CovDesc{2}(uv)$; and
+  \item $y_1 = y_2 = \cdots = y_q$ if and only if
+    $\left(\CovAnc{1}(uv)\right)^2 = q \cdot \CovAnc{2}(uv)$.
+  \end{itemize}
+\end{lem}
+\begin{proof}
+  We prove the descendant-side condition.
+  \begin{align*}
+    &q \cdot \CovDesc{2}(uv) - \left(\CovDesc{1}(uv)\right)^2\\
+    &= q \cdot \sum_{i=1}^{q} \left(\id(x_i)\right)^2 - \left(\sum_{i=1}^{q} \id(x_i)\right)^2 \\
+    &= \sum_{i=1}^{q} (q-1)\left(\id(x_i)\right)^2 -
+    \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} 2 \id(x_i) \cdot \id(x_j) \\
+    &= \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} \left(\id(x_i) - \id(x_j)\right)^2;
+  \end{align*}
+  the last equality holds by rearranging the terms.
+  Since each term in the last summation is non-negative, 
+  the entire summation is equal to zero if and only if
+  $\id(x_i) = \id(x_j)$ for all $i,j \in \{1, \dots, q\}$,
+  which is equivalent to $x_1 = x_2 = \cdots = x_q$.
+  The ancestor-side condition can be proved similarly.
+\end{proof}
+
+
+\subsection{Difference-Based Aggregation on a Rooted Tree}
+\label{sec:diff_agg}
+Let $T$ be a rooted tree.
+Each tree edge $e$ stores a value, say $A(e)$
+(from $\mathbb{Z}$, $\mathbb{R}$,
+or, more generally, from an additive abelian group),
+and update operations add a constant value
+to all tree edges on a specified
+ancestor--descendant path in $T$.
+
+Formally, update operations are specified by triples $(x, y,\alpha)$,
+where $y$ is an ancestor of $x$ in $T$,
+and $\alpha$ is a value to be added to all tree edges.
+The goal is to compute the final value stored in each tree edge
+after performing a sequence of such update operations.
+
+In order to achieve this goal efficiently,
+we use a difference-based approach.
+We associate each vertex $v$ in $T$
+with an auxiliary value $\Delta(v)$, initially set to zero.
+For each update operation $(x,y,\alpha)$,
+we perform:
+\[
+  \plusassign{\Delta(x)}{\alpha},
+  \qquad
+  \minusassign{\Delta(y)}{\alpha}.
+\]
+
+\begin{lem}
+  \label{lem:diff_agg}
+  Let $T$ be a rooted tree and
+  each tree edge $e$ store an initial value $A(e)$.
+  After performing a sequence of update operations
+  represented as triples $(x,y,\alpha)$ on a rooted tree $T$,
+  for each tree edge $\pi(v)v$, 
+  the updated value is given by
   \[
-  \CovMult(uv) = \sum_{w \in V(T_v)} \delta(w).
+  A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w).
   \]
 \end{lem}
 \begin{proof}
-  By the definition of $\delta$,
-  every back edge $(x,y)$ contributes $+1$ to $\delta(x)$ and $-1$ to $\delta(y)$.
-  We examine how such a back edge contributes to the sum~$\sum_{w \in V(T_v)} \delta(w)$.
+  Consider a single update operation $(x,y,\alpha)$.
+  By the definition of $\Delta$,
+  the operation contributes $+\alpha$ to $\Delta(x)$ and $-\alpha$ to $\Delta(y)$.
+  We examine how such an operation contributes to the sum~$\sum_{w \in V(T_v)} \Delta(w)$.
 
   If $x \in V(T_v)$ and $y \not\in V(T_v)$,
-  then $(x,y)$ covers $uv$ and contributes $+1$ to the sum.
+  then the $x$--$y$ path passes through $\pi(v)v$,
+  and the operation contributes $+\alpha$ to the sum.
   If both $x$ and $y$ belong to $V(T_v)$,
-  then $(x,y)$ does not cover $uv$ and
-  its $+1$ and $-1$ contributions cancel within $T_v$,
+  then the $x$--$y$ path does not pass through $\pi(v)v$,
+  and its $+\alpha$ and $-\alpha$ contributions cancel within $T_v$,
   yielding a total contribution of $0$.
   If neither $x$ nor $y$ is in $T_v$,
-  then $(x,y)$ does not cover $uv$ and again contributes $0$ to the sum.
+  then the $x$--$y$ path does not pass through $\pi(v)v$,
+  and again contributes $0$ to the sum.
   Since $y$ is a proper ancestor of $x$,
   the case with $x \not\in V(T_v)$ and $y \in V(T_v)$ cannot occur.
 
-  Therefore, the only back edges that contribute a \nonzero amount are those
-  that cover $uv$,
-  and each such edge contributes exactly $+1$.
+  Therefore, the only update operations that contribute a \nonzero amount are those
+  whose $x$--$y$ path passes through $\pi(v)v$,
+  and each such operation contributes exactly $+\alpha$.
 \end{proof}
 
-In order to compute the cover-delta values for all vertices in $V$,
-we can process each back edge $(x,y)$ of $G$
-and increment $\delta(x)$ by 1 and decrement $\delta(y)$ by 1.
-This can be done in $O(n+m)$ time
-by performing a DFS on $G$ to obtain its DFS-tree $T$
-and then processing all back edges of $G$.
-
-The second phase computes the cover multiplicities for all tree edges
-by aggregating the cover-delta values along the DFS-tree $T$.
-The details are shown in Algorithm~\ref{alg:cov_mult}.
-
-
-% Algo I
 \begin{algorithm}[t]
-  \caption{Computation of Cover Multiplicities by DFS}
-  \label{alg:cov_mult}
+  \caption{Difference-Based Aggregation on a Rooted Tree}
+  \label{alg:diff_agg}
   \begin{algorithmic}[1]
-    \Require A 2-edge-connected undirected graph $G=(V,E)$,
-    a DFS-tree $T$ of $G$ rooted at $r \in V$,
-    and
-    the cover-delta values $\delta$ for all vertices in $V$
-    \Ensure The cover multiplicities of all tree edges
-    \State $\CovMult := {}$ an array from tree edges to integers;
-    \For{\textbf{each} child $w$ of the root $r$ in $T$}
-      \State Execute \Call{CoverMultiplicity-DFS}{$w$}
+    \Require A rooted tree $T$,
+    an initilal value $A(e)$ for all tree edges $e$ in $E(T)$,
+    and a sequence of update operations $(x,y,\alpha)$
+    \Ensure The final values for all tree edges
+    % % \State \Initialise $\Delta(v) := 0$ and $A(e) := 0$
+    % for all $v \in V(T)$ and $e \in E(T)$;
+    \State \Initialise $\Delta(v) := 0$ for all $v \in V(T)$ and $\mathit{value}(e) := A(e)$ for all $e \in E(T)$;
+    \For{\textbf{each} update operation $(x,y,\alpha)$}
+      \State $\plusassign{\Delta(x)}{\alpha}$;
+      $\minusassign{\Delta(y)}{\alpha}$
     \EndFor;
-    \State \textbf{output} $\CovMult(e)$ for all tree edges $e$ in $E(T)$
-    
-    \\\Procedure{CoverMultiplicity-DFS}{$v$}
-    \State $\CovMult(\pi(v)v) := \delta(v)$;
+    \For{\textbf{each} child $w$ of the root $r$ in $T$}
+      \State Execute \Call{Aggregate-DFS}{$w$}
+    \EndFor;
+    \State \textbf{output} $\mathit{value}(e)$ for all tree edges $e$ in $E(T)$
+
+    \\\Procedure{Aggregate-DFS}{$v$}
+    \State $\plusassign{\mathit{value}(\pi(v)v)}{\Delta(v)}$;
     \For{\textbf{each} child $w$ of $v$ in $T$}
-      \State Execute \Call{CoverMultiplicity-DFS}{$w$};
-      \State $\CovMult(\pi(v)v) := \CovMult(\pi(v)v) + \CovMult(vw)$
+      \State Execute \Call{Aggregate-DFS}{$w$};
+      \State $\plusassign{\mathit{value}(\pi(v)v)}{\mathit{value}(vw)}$
     \EndFor
-    % \State \textbf{return} $\CovMult(uv)$;
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
 
-% % Algo II
-% \begin{algorithm}[t]
-%   \caption{Preprocessing Back Edges}
-%   \label{alg:preproc_backedge}
-%   \begin{algorithmic}[1]
-%     \Require A 2-edge-connected undirected graph $G=(V,E)$
-%     and its DFS-tree $T$ rooted at $r \in V$
-%     \Ensure The cover-delta values $\delta$ for all vertices in $V$
-%     \State Initialize $\delta(v) := 0$ for all $v \in V$;
-%     \For{\textbf{each} back edge $(x,y)$ of $G$}
-%     \label{codeline:backedge_loop}
-%       \State $\delta(x) := \delta(x) + 1$;
-%       \State $\delta(y) := \delta(y) - 1$
-%     \EndFor;
-%     \State \textbf{return} $\delta$
-%   \end{algorithmic}
-% \end{algorithm}
-
-% The overall algorithm is as follows:
-% \begin{enumerate}
-% \item Execute Algorithm~\ref{alg:preproc_backedge} to compute
-%   the cover-delta values for all vertices in $V$.
-% \item Execute Algorithm~\ref{alg:cov_mult} with the tree edge
-%   incident to the root $r$ to compute the cover multiplicities
-%   for all tree edges in $T$.
-% \end{enumerate}
-
-
 \begin{lem}
-  \label{lem:cov_mult}
-  Given a 2-edge-connected undirected graph $G=(V,E)$
-  with $n=|V|$ and $m=|E|$,
-  its DFS-tree $T$ rooted at $r \in V$, and 
-  the cover-delta values $\delta$ for all vertices in $V$,
-  Algorithm~\ref{alg:cov_mult} computes the cover multiplicities
-  for all tree edges in $O(n)$ time.
+  \label{lem:diff_agg_algo}
+  Given a rooted tree $T$ with $n$ vertices
+  and a sequence of $q$ update operations,
+  \algoref{diff_agg} computes the final values
+  for all tree edges in $O(q+n)$ time.
 \end{lem}
 \begin{proof}
-  By \lemref{delta_cov},
+  By \lemref{diff_agg},
   it suffices to show that
-  Algorithm~\ref{alg:cov_mult} correctly computes
-  the sum of the cover-delta values for all vertices in $T_v$.
+  \algoref{diff_agg} correctly computes
+  $
+  A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w).
+  $
+  for each tree edge $\pi(v)v$.
+  % the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
 
   We first show the case with $v$ being a leaf.
   In this case, since there is no child of $v$ in $T$,
-  the algorithm returns $\CovMult(uv) = \delta(v)$.
+  % the algorithm returns $A(uv) = \Delta(v)$.
+  the algorithm sets $\mathit{value}(\pi(v)v) = A(\pi(v)v) + \Delta(v)$.
   
   Next, we consider the case other than the leaf case. 
   We assume that, for any child $w$ of $v$ in $T$,
-  \Call{CoverMultiplicity-DFS}{$w$} correctly computes
-  the sum of the cover-delta values for all vertices in $T_w$.
+  \Call{Aggregate-DFS}{$w$} correctly computes
+  the sum of the auxiliary values $\Delta$ for all vertices in $T_w$.
   Then, the algorithm computes
   \[
-  \delta(v) + \sum_{w \text{:~child of } v} \sum_{z \in V(T_w)} \delta(z)
-  = \sum_{z \in V(T_v)} \delta(z)
+  A(\pi(v)v) +
+  \Delta(v) + \sum_{w \text{:~child of } v} \sum_{z \in V(T_w)} \Delta(z)
+  = A(\pi(v)v) + \sum_{z \in V(T_v)} \Delta(z)
   \]
-  that is the sum of the cover-delta values for all vertices in $T_v$.
+  that is the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
 
+  Since each update operation is processed in $O(1)$ time,
+  the total time for all $q$ update operations is $O(q)$.
   We visit each vertex exactly once,
   and consider all tree edges exactly once,
-  which means we can correctly compute the cover multiplicities for all tree edges.
+  which means we can correctly compute the final values for all tree edges.
   Since we traverse only tree edges in $T$,
-  we can execute the algorithm in $O(n)$ time.
+  we can execute the aggregation in $O(n)$ time.
 \end{proof}
 
-% If we want to compute the cover-source multiplicities,
-% we can modify Algorithm~\ref{alg:preproc_backedge}
-% so that, in line \ref{codeline:backedge_loop} of Algorithm~\ref{alg:preproc_backedge},
-% we only consider the longest back edges outgoing from each vertex.
-To compute the cover-source multiplicities,
-we modify the definition of the cover-delta value so that
-it accounts only for the longest outgoing back edges.
-We define the \emph{cover-source-delta} value $\delta_{\text{src}}(v)$
-to be
-\[
-\delta_{\text{src}}(v)
-:=
-\left.\begin{cases}
-1 & \text{if } \lbe(v) \text{ exists} \\
-0 & \text{otherwise}
-\end{cases}
-\right\}
-% \big| \{\lbeTarget(x) \mid \lbe(x) \text{ exists}\} \big|
-- \big| \{x \in V \mid \lbe(x) = (x,v)\} \big|.
-\]
-Equivalently,
-if we orient only the longest back edges from descendants to ancestors
-and remove all the other edges,
-then $\delta_{\text{src}}(v)$ equals the outdegree minus the indegree of $v$ in the resulting directed graph.
-Then, by a similar argument to \lemref{delta_cov},
-we can show that
-\[
-\CovSrc(uv) = \sum_{w \in V(T_v)} \delta_{\text{src}}(w).
-\]
-Thus, by replacing $\delta$ with $\delta_{\text{src}}$ in Algorithm~\ref{alg:cov_mult},
-we can compute the cover-source multiplicities for all tree edges.
+\subsection{Computation of Cover Information}
+\label{sec:cov_info_agg}
+Let $G=(V,E)$ be a 2-edge-connected undirected graph 
+and $T$ be a DFS-tree of $G$ rooted at $r \in V$.
+As described in \secref{prel_dfs},
+every back edge $(x,y)$ is oriented from a descendant $x$ to a proper ancestor $y$.
 
+Each back edge $(x,y)$ covers
+all tree edges on the unique $y$--$x$ path in $T$.
+Therefore, we have a natural mapping from back edges
+to an update opeation $(x,y,\alpha)$ on $T$,
+where $\alpha$ is chosen appropriately depending on the quantity to be computed.
 
-Therefore, we obtain the following theorem that 
-\engvariation{summarises}{summarizes} the results in this section.
-
-\begin{thm}
-  \label{thm:cov_mult}
+\begin{lem}
+  \label{lem:cov_info_agg}
   Given a 2-edge-connected undirected graph $G=(V,E)$
   with $n=|V|$ and $m=|E|$,
-  we can compute the cover multiplicity and the cover-source multiplicity
-  for all tree edges in $G$ in $O(n+m)$ time.
-\end{thm}
+  and a DFS-tree $T$ of $G$ rooted at $r \in V$,
+  we can compute the following quantities for all tree edges in $T$
+  in $O(n+m)$ time:
+  \begin{itemize}
+  \item Cover multiplicity $\CovMult(uv)$;
+  \item Cover-source multiplicity $\CovSrc(uv)$;
+  \item Weighted cover information $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
+  \item Weighted cover information $\CovAnc{1}(uv)$ and $\CovAnc{2}(uv)$.
+  \end{itemize}
+\end{lem}
 \begin{proof}
-  We first perform a DFS on $G$ to obtain its DFS-tree $T$
-  rooted at an arbitrary vertex $r \in V$ in $O(n+m)$ time.
-  Next, we process all back edges of $T$
-  to compute the cover-delta values~$\delta$ or cover-source-delta values~$\delta_{\text{src}}$ for all vertices in $V$ in $O(n+m)$ time.
-  Finally, we execute Algorithm~\ref{alg:cov_mult}
-  with each tree edge $(r, v)$ incident to the root $r$
-  to compute the cover multiplicities for all tree edges in $T$.
-  By \lemref{cov_mult},
-  this step takes $O(n)$ time.
-  Thus, the total time complexity is $O(n+m)$.
+  By the definiton of each quantity,
+  we can represent the contribution of each back edge $(x,y)$
+  as an update operation $(x,y,\alpha)$ on $T$,
+  where $\alpha$ is set as follows:
+  \begin{itemize}
+  \item For $\CovMult(uv)$, set $\alpha := 1$;
+  \item For $\CovSrc(uv)$, set $\alpha := 1$ if $(x, y) = \lbe(x)$; otherwise, set $\alpha := 0$;
+  \item For $\CovDesc{i}(uv)$, set $\alpha := \id(x)^i$ for $i \in \{1, 2\}$; and
+  \item For $\CovAnc{i}(uv)$, set $\alpha := \id(y)^i$ for $i \in \{1, 2\}$.
+  \end{itemize}
+  Since there are $O(m)$ back edges in $G$,
+  we can perform $O(m)$ update operations on $T$.
+  By \lemref{diff_agg_algo},
+  we can compute the final values for all tree edges in $O(n+m)$ time.
 \end{proof}
+
+%%%%%
+% \section{Computation of Cover multiplicities}
+% \label{sec:cov_mult}
+% In this section, we present an $O(n+m)$-time algorithm
+% to compute the cover multiplicity and the cover-source multiplicity
+% for all tree edges in a 2-edge-connected undirected graph $G=(V,E)$
+% with $n=|V|$ and $m=|E|$.
+
+% Since the two multiplicities can be computed in a similar manner,
+% we here describe the algorithm for computing the cover multiplicities;
+% the cover-source multiplicities can be computed with a minor modification
+% as described at the end of this section.
+
+% In this section, we assume that a DFS-tree $T$ of $G$,
+% rooted at an arbitrary vertex $r \in V$, is already given.
+% The algorithm consists of two phases.
+% In the first phase, we process each back edge to update an auxiliary
+% value called \emph{cover-delta value} associated with its endpoints.
+% %(Algorithm~\ref{alg:preproc_backedge}).
+% In the second phase, we traverse $T$ in a depth-first manner to aggregate these values
+% along the tree and compute the multiplicity for each tree edge
+% (Algorithm~\ref{alg:cov_mult}).
+% % The details are described below.
+
+% In order to compute the cover multiplicities,
+% we define the \emph{cover-delta value} $\delta(v)$ for each vertex $v \in V$ as follows:
+% \[
+% \delta(v)
+% \triangleq \big| \{(v,y) \mid (v,y) \text{ is a back edge}\} \big| - \big| \{(x,v) \mid (x,v) \text{ is a back edge}\} \big|.
+% \]
+% Equivalently, 
+% if we orient all back edges from descendants to ancestors as described in \secref{prel_dfs}
+% and remove all tree edges,
+% then $\delta(v)$ equals the outdegree minus the indegree of $v$ in the resulting directed graph.
+% The cover-delta values satisfy a fundamental relation with the cover
+% multiplicity, which we show below.
+
+% \begin{lem}
+%   \label{lem:delta_cov}
+%   For any tree edge $(u,v)$ of $G$,
+%   the cover multiplicity of $(u,v)$ is equal to the sum of
+%   the cover-delta values for all vertices in $T_v$:
+%   \[
+%   \CovMult(uv) = \sum_{w \in V(T_v)} \delta(w).
+%   \]
+% \end{lem}
+% \begin{proof}
+%   By the definition of $\delta$,
+%   every back edge $(x,y)$ contributes $+1$ to $\delta(x)$ and $-1$ to $\delta(y)$.
+%   We examine how such a back edge contributes to the sum~$\sum_{w \in V(T_v)} \delta(w)$.
+
+%   If $x \in V(T_v)$ and $y \not\in V(T_v)$,
+%   then $(x,y)$ covers $uv$ and contributes $+1$ to the sum.
+%   If both $x$ and $y$ belong to $V(T_v)$,
+%   then $(x,y)$ does not cover $uv$ and
+%   its $+1$ and $-1$ contributions cancel within $T_v$,
+%   yielding a total contribution of $0$.
+%   If neither $x$ nor $y$ is in $T_v$,
+%   then $(x,y)$ does not cover $uv$ and again contributes $0$ to the sum.
+%   Since $y$ is a proper ancestor of $x$,
+%   the case with $x \not\in V(T_v)$ and $y \in V(T_v)$ cannot occur.
+
+%   Therefore, the only back edges that contribute a \nonzero amount are those
+%   that cover $uv$,
+%   and each such edge contributes exactly $+1$.
+% \end{proof}
+
+% In order to compute the cover-delta values for all vertices in $V$,
+% we can process each back edge $(x,y)$ of $G$
+% and increment $\delta(x)$ by 1 and decrement $\delta(y)$ by 1.
+% This can be done in $O(n+m)$ time
+% by performing a DFS on $G$ to obtain its DFS-tree $T$
+% and then processing all back edges of $G$.
+
+% The second phase computes the cover multiplicities for all tree edges
+% by aggregating the cover-delta values along the DFS-tree $T$.
+% The details are shown in Algorithm~\ref{alg:cov_mult}.
+
+
+% % Algo I
+% \begin{algorithm}[t]
+%   \caption{Computation of Cover Multiplicities by DFS}
+%   \label{alg:cov_mult}
+%   \begin{algorithmic}[1]
+%     \Require A 2-edge-connected undirected graph $G=(V,E)$,
+%     a DFS-tree $T$ of $G$ rooted at $r \in V$,
+%     and
+%     the cover-delta values $\delta$ for all vertices in $V$
+%     \Ensure The cover multiplicities of all tree edges
+%     \State $\CovMult := {}$ an array from tree edges to integers;
+%     \For{\textbf{each} child $w$ of the root $r$ in $T$}
+%       \State Execute \Call{CoverMultiplicity-DFS}{$w$}
+%     \EndFor;
+%     \State \textbf{output} $\CovMult(e)$ for all tree edges $e$ in $E(T)$
+    
+%     \\\Procedure{CoverMultiplicity-DFS}{$v$}
+%     \State $\CovMult(\pi(v)v) := \delta(v)$;
+%     \For{\textbf{each} child $w$ of $v$ in $T$}
+%       \State Execute \Call{CoverMultiplicity-DFS}{$w$};
+%       \State $\CovMult(\pi(v)v) := \CovMult(\pi(v)v) + \CovMult(vw)$
+%     \EndFor
+%     % \State \textbf{return} $\CovMult(uv)$;
+%     \EndProcedure
+%   \end{algorithmic}
+% \end{algorithm}
+
+% % % Algo II
+% % \begin{algorithm}[t]
+% %   \caption{Preprocessing Back Edges}
+% %   \label{alg:preproc_backedge}
+% %   \begin{algorithmic}[1]
+% %     \Require A 2-edge-connected undirected graph $G=(V,E)$
+% %     and its DFS-tree $T$ rooted at $r \in V$
+% %     \Ensure The cover-delta values $\delta$ for all vertices in $V$
+% %     \State Initialize $\delta(v) := 0$ for all $v \in V$;
+% %     \For{\textbf{each} back edge $(x,y)$ of $G$}
+% %     \label{codeline:backedge_loop}
+% %       \State $\delta(x) := \delta(x) + 1$;
+% %       \State $\delta(y) := \delta(y) - 1$
+% %     \EndFor;
+% %     \State \textbf{return} $\delta$
+% %   \end{algorithmic}
+% % \end{algorithm}
+
+% % The overall algorithm is as follows:
+% % \begin{enumerate}
+% % \item Execute Algorithm~\ref{alg:preproc_backedge} to compute
+% %   the cover-delta values for all vertices in $V$.
+% % \item Execute Algorithm~\ref{alg:cov_mult} with the tree edge
+% %   incident to the root $r$ to compute the cover multiplicities
+% %   for all tree edges in $T$.
+% % \end{enumerate}
+
+
+% \begin{lem}
+%   \label{lem:cov_mult}
+%   Given a 2-edge-connected undirected graph $G=(V,E)$
+%   with $n=|V|$ and $m=|E|$,
+%   its DFS-tree $T$ rooted at $r \in V$, and 
+%   the cover-delta values $\delta$ for all vertices in $V$,
+%   Algorithm~\ref{alg:cov_mult} computes the cover multiplicities
+%   for all tree edges in $O(n)$ time.
+% \end{lem}
+% \begin{proof}
+%   By \lemref{delta_cov},
+%   it suffices to show that
+%   Algorithm~\ref{alg:cov_mult} correctly computes
+%   the sum of the cover-delta values for all vertices in $T_v$.
+
+%   We first show the case with $v$ being a leaf.
+%   In this case, since there is no child of $v$ in $T$,
+%   the algorithm returns $\CovMult(uv) = \delta(v)$.
+  
+%   Next, we consider the case other than the leaf case. 
+%   We assume that, for any child $w$ of $v$ in $T$,
+%   \Call{CoverMultiplicity-DFS}{$w$} correctly computes
+%   the sum of the cover-delta values for all vertices in $T_w$.
+%   Then, the algorithm computes
+%   \[
+%   \delta(v) + \sum_{w \text{:~child of } v} \sum_{z \in V(T_w)} \delta(z)
+%   = \sum_{z \in V(T_v)} \delta(z)
+%   \]
+%   that is the sum of the cover-delta values for all vertices in $T_v$.
+
+%   We visit each vertex exactly once,
+%   and consider all tree edges exactly once,
+%   which means we can correctly compute the cover multiplicities for all tree edges.
+%   Since we traverse only tree edges in $T$,
+%   we can execute the algorithm in $O(n)$ time.
+% \end{proof}
+
+% % If we want to compute the cover-source multiplicities,
+% % we can modify Algorithm~\ref{alg:preproc_backedge}
+% % so that, in line \ref{codeline:backedge_loop} of Algorithm~\ref{alg:preproc_backedge},
+% % we only consider the longest back edges outgoing from each vertex.
+% To compute the cover-source multiplicities,
+% we modify the definition of the cover-delta value so that
+% it accounts only for the longest outgoing back edges.
+% We define the \emph{cover-source-delta} value $\delta_{\text{src}}(v)$
+% to be
+% \[
+% \delta_{\text{src}}(v)
+% \triangleq
+% \left.\begin{cases}
+% 1 & \text{if } \lbe(v) \text{ exists} \\
+% 0 & \text{otherwise}
+% \end{cases}
+% \right\}
+% % \big| \{\lbeTarget(x) \mid \lbe(x) \text{ exists}\} \big|
+% - \big| \{x \in V \mid \lbe(x) = (x,v)\} \big|.
+% \]
+% Equivalently,
+% if we orient only the longest back edges from descendants to ancestors
+% and remove all the other edges,
+% then $\delta_{\text{src}}(v)$ equals the outdegree minus the indegree of $v$ in the resulting directed graph.
+% Then, by a similar argument to \lemref{delta_cov},
+% we can show that
+% \[
+% \CovSrc(uv) = \sum_{w \in V(T_v)} \delta_{\text{src}}(w).
+% \]
+% Thus, by replacing $\delta$ with $\delta_{\text{src}}$ in Algorithm~\ref{alg:cov_mult},
+% we can compute the cover-source multiplicities for all tree edges.
+
+
+% Therefore, we obtain the following theorem that 
+% \engvariation{summarises}{summarizes} the results in this section.
+
+% \begin{thm}
+%   \label{thm:cov_mult}
+%   Given a 2-edge-connected undirected graph $G=(V,E)$
+%   with $n=|V|$ and $m=|E|$,
+%   we can compute the cover multiplicity and the cover-source multiplicity
+%   for all tree edges in $G$ in $O(n+m)$ time.
+% \end{thm}
+% \begin{proof}
+%   We first perform a DFS on $G$ to obtain its DFS-tree $T$
+%   rooted at an arbitrary vertex $r \in V$ in $O(n+m)$ time.
+%   Next, we process all back edges of $T$
+%   to compute the cover-delta values~$\delta$ or cover-source-delta values~$\delta_{\text{src}}$ for all vertices in $V$ in $O(n+m)$ time.
+%   Finally, we execute Algorithm~\ref{alg:cov_mult}
+%   with each tree edge $(r, v)$ incident to the root $r$
+%   to compute the cover multiplicities for all tree edges in $T$.
+%   By \lemref{cov_mult},
+%   this step takes $O(n)$ time.
+%   Thus, the total time complexity is $O(n+m)$.
+% \end{proof}
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Mathematical Properties of Minimal Removable Sets}
+\section{Mathematical Properties and Computation of Minimal Removable Sets}
 \label{sec:mrs_props}
 \subsection{DFS-Tree Leaf MinRSs}
 \label{sec:leaf_mrs}
@@ -794,7 +1074,7 @@ that computes $\SrcExc_v$ for each leaf $v$ of $T$.
   which means that $\CovSrc(e) \geq 2$.
   Thus, we can check whether $\{v\}$ is a MinRS of $G$
   by checking whether $\SrcExc_v$ is equal to $\{\pi(v)v\}$ ot not.
-  By \thmref{cov_mult},
+  By \lemref{cov_info_agg},
   we can compute the cover-source multiplicities for all tree edges
   in $O(n+m)$ time.
   By \lemref{treeedge_to_backedge},
