@@ -126,16 +126,17 @@
 \newcommand{\id}{\mathit{id}}
 \newcommand{\CovDesc}[1]{\mathit{AggDesc}_{#1}}
 \newcommand{\CovAnc}[1]{\mathit{AggAnc}_{#1}}
+\newcommand{\Leafset}{V_{\mathrm{leaf}}}
 
 \newcommand{\maxTwoDegPath}{degree-two segment\xspace}
-\newcommand{\MaxTwoDegPath}{\MFUsentencecase{\maxTwoDegPath}\xspace}
+\newcommand{\MaxTwoDegPath}{\MFUsentencecase{\maxTwoDegPath}}
 \newcommand{\MaxTwoDegPathCap}{Degree-Two Segment\xspace}
 \newcommand{\maxTwoDegPaths}{{\maxTwoDegPath}s\xspace}
-\newcommand{\MaxTwoDegPaths}{\MFUsentencecase{\maxTwoDegPaths}\xspace}
+\newcommand{\MaxTwoDegPaths}{\MFUsentencecase{\maxTwoDegPaths}}
 \newcommand{\aggID}{aggregated identifier\xspace}
-\newcommand{\AggID}{\MFUsentencecase{\aggID}\xspace}
+\newcommand{\AggID}{\MFUsentencecase{\aggID}}
 \newcommand{\aggIDs}{{\aggID}s\xspace}
-\newcommand{\AggIDs}{\MFUsentencecase{\aggIDs}\xspace}
+\newcommand{\AggIDs}{\MFUsentencecase{\aggIDs}}
 
 
 \usepackage[british,american]{babel}
@@ -253,6 +254,8 @@ We root $T$ at an arbitrary vertex $r \in V$.
 % Subtree
 For each $v\in V$, we denote by $T_v$ the subtree of $T$
 rooted at $v$.
+% Leaf set
+We denote by $\Leafset(T)$ the set of leaves of $T$.
 
 An edge in $E$ is called a \emph{tree edge} if it appears in $T$,
 and a \emph{back edge} otherwise.
@@ -451,16 +454,17 @@ on \aggIDs.
 \subsection{Difference-Based Aggregation on a Rooted Tree}
 \label{sec:diff_agg}
 Let $T$ be a rooted tree.
-Each edge $e$ stores a value, say $A(e)$
+We let each edge $e$ store a value, say $A(e)$
 (from $\mathbb{Z}$, $\mathbb{R}$,
 or, more generally, from an additive abelian group),
-and update operations add a constant value
+and consider update operations
+that add a constant value
 to all edges on a specified
 ancestor--descendant path in $T$.
 
 Formally, update operations are specified by triples $(x, y,\alpha)$,
 where $y$ is an ancestor of $x$ in $T$,
-and $\alpha$ is a value to be added to all edges on the $x$--$y$ path.
+and $\alpha$ is a value to be added to all edges on the $y$--$x$ path.
 The goal is to compute the final value stored in each edge
 after performing a sequence of such update operations.
 
@@ -489,7 +493,8 @@ we perform:
   \]
 \end{lem}
 \begin{proof}
-  Consider a single update operation $(x,y,\alpha)$.
+  It suffices to show the claim for a single update operation $(x,y,\alpha)$,
+  since the contributions of multiple operations are additive.
   By the definition of $\Delta$,
   the operation contributes $+\alpha$ to $\Delta(x)$ and $-\alpha$ to $\Delta(y)$.
   We examine how such an operation contributes to the sum~$\sum_{w \in V(T_v)} \Delta(w)$.
@@ -594,8 +599,8 @@ every back edge $(x,y)$ is oriented from a descendant $x$ to a proper ancestor $
 
 Each back edge $(x,y)$ covers
 all tree edges on the unique $y$--$x$ path in $T$.
-Therefore, we have a natural mapping from back edges
-to an update opeation $(x,y,\alpha)$ on $T$,
+Naturally, we have a mapping from back edges
+to an update operation $(x,y,\alpha)$ on $T$,
 where $\alpha$ is chosen appropriately depending on the quantity to be computed.
 
 \begin{lem}
@@ -603,13 +608,13 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
   Given a 2-edge-connected undirected graph $G=(V,E)$
   with $n=|V|$ and $m=|E|$,
   and a DFS-tree $T$ of $G$ rooted at $r \in V$,
-  we can compute the following quantities for all tree edges in $T$
+  we can compute the following values for all tree edges in $T$
   in $O(n+m)$ time:
   \begin{itemize}
   \item Cover multiplicity $\CovMult(uv)$;
   % \item Cover-source multiplicity $\CovSrc(uv)$;
-  \item \AggIDs{}$\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$; and
-  \item \AggIDs{}$\CovAnc{1}(uv)$ and $\CovAnc{2}(uv)$.
+  \item \AggIDs $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$; and
+  \item \AggIDs $\CovAnc{1}(uv)$ and $\CovAnc{2}(uv)$.
   \end{itemize}
 \end{lem}
 \begin{proof}
@@ -872,31 +877,20 @@ In these works, they showed the following necessary condition for MinRSs.
   \label{lem:mrs_cond}
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$.
   If a \nonempty proper subset $S \subsetneq V$ is a MinRS of $G$,
-  then,
+  then, either
   \begin{itemize}
   \item $S$ forms a \maxTwoDegPath in $G$;
   or
-  \item $S$ is a singleton $\{v\}$, where $v \in V$.
+  \item $S$ is a singleton $\{v\}$, where $v \in V$ and $\deg_G(v) \geq 3$.
   \end{itemize}
 \end{lem}
+By degree conditions,
+this \categorisation is mutually exclusive.
 By \lemref{mrs_cond},
 we can list all candidates for MinRSs in $O(n+m)$ time
 by finding all \maxTwoDegPaths in $G$
 and collecting all singleton vertex sets.
 
-Based on \lemref{mrs_cond},
-we classify MinRSs into several types
-to make them easier to handle with a DFS-tree $T$ of $G$ rooted at an arbitrary vertex $r \in V$:
-\begin{itemize}
-\item the MinRS containing the root of the DFS-tree;
-\item MinRSs containing at least one leaf of the DFS-tree;
-\item MinRSs consisting only of internal vertices of the DFS-tree that form a \maxTwoDegPath in $G$; and
-\item MinRSs consisting of a single internal vertex of the DFS-tree with degree at least three in $G$.
-\end{itemize}
-
-The MinRS containing the root of the DFS-tree
-contains no leaf of the DFS-tree;
-this \categorisation is mutually exclusive.
 % Moreover,
 % if $r$ is contained in some MinRS,
 % then it is the only such MinRS in $G$:
@@ -919,9 +913,7 @@ this \categorisation is mutually exclusive.
 
 In the rest of this section,
 we focus on MinRSs that do not contain the root of the DFS-tree.
-% Before going into details,
-% leaf, and \maxTwoDegPathの章で議論を簡単にするために
-% rootをふくない pathなどの性質を述べる
+%
 Before going into details,
 we show a basic property of \maxTwoDegPaths not containing the root of the DFS-tree
 for the sake of simplifying discussions in the following subsections.
@@ -959,9 +951,33 @@ for the sake of simplifying discussions in the following subsections.
   (iii) is immediate from (ii).
 \end{proof}
 
+Based on \lemref{mrs_cond},
+we classify MinRSs into several types
+to make them easier to handle with a DFS-tree $T$ of $G$ rooted at an arbitrary vertex $r \in V$:
+\begin{itemize}
+\item a MinRS containing the root of the DFS-tree
+(unique if exists);
+\item MinRSs containing exactly one leaf of the DFS-tree;
+\item MinRSs consisting only of internal vertices of the DFS-tree that form a \maxTwoDegPath in $G$; and
+\item MinRSs consisting of a single internal vertex of the DFS-tree with degree at least three in $G$.
+\end{itemize}
+
+If all the vertices in the root-to-leaf path in $T$
+has degree two in $G$,
+then $G$ is a cycle and has no MinRS.
+Otherwise, an MinRS containing the root of the DFS-tree
+contains no leaf of the DFS-tree.
+By \lemref{max2degpath_props}(iii),
+a MinRS containing a leaf of the DFS-tree
+contains exactly one leaf of the DFS-tree.
+Thus,
+this \categorisation is mutually exclusive and exhaustive.
+
 \subsection{MinRSs Containing DFS-Tree Leaf}
 \label{sec:leaf_mrs}
-In this subsection, we consider MinRSs that consist of only leaves of a DFS-tree.
+In this subsection, we consider MinRSs containing exactly one leaf of a DFS-tree.
+Note that \maxTwoDegPath can be a single vertex,
+which means this path consists of only a leaf of the DFS-tree.
 
 We first show a basic property of leaves in a DFS-tree
 of a 2-edge-connected undirected graph.
@@ -970,15 +986,15 @@ of a 2-edge-connected undirected graph.
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$
   and
   $T$ be a DFS-tree of $G$ rooted at $r\in V$.
-  % Any leaf of $T$ is not an articulation point of $G$.
-  % leaf or Max2degpath containing leaf は 削除しても連結性を保つ
-  For any leaf $v\in V$ of $T$ or any \maxTwoDegPath~$P$ containing a leaf of $T$,
+  For any leaf $v\in \Leafset(T)$ or
+  any \maxTwoDegPath~$P$ containing a leaf of $T$,
   $G - v$ or $G - P$ is connected.
 \end{lem}
 \begin{proof}
   Since $T$ is a spanning tree of $G$,
   every path in $T$ also exists in $G$.
-  For any leaf $v\in V$ of $T$ or any \maxTwoDegPath~$P$ containing a leaf of $T$,
+  For any leaf $v\in \Leafset(T)$ or
+  any \maxTwoDegPath~$P$ containing a leaf of $T$,
   $T - v$ or $T - P$ is connected.
   Thus, $G - v$ or $G - P$ is also connected.
 \end{proof}
@@ -1039,14 +1055,13 @@ of a 2-edge-connected undirected graph.
 
 \begin{lem}
   \label{lem:leaf_mrs}
-  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$ and
-  $T$ be a DFS-tree of $G$ rooted at $r\in V$.
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
+  $T$ be a DFS-tree of $G$ rooted at $r\in V$
+  and $x \in \Leafset(T)$.
   Let $S \subsetneq V$ be 
   a nonempty proper subset of $V$ that
-  is either a singleton consisting of a leaf of $T$
-  or a \maxTwoDegPath containing a leaf of $T$;
-  let $x$ denote the leaf of $T$ in $S$ and
-  $a$ denote the other endpoint of $S$.
+  forms the $a$--$x$ \maxTwoDegPath,
+  where $a \in V \setminus \{r,x\}$ is an ancestor of $x$ in $T$.
   Note that $a = x$ if $S$ is a singleton.
   Then, $S$ is a MinRS of $G$ if and only if,
   for any tree edge $(u,v)$ with $v \not\in S$,
@@ -1063,7 +1078,7 @@ of a 2-edge-connected undirected graph.
   every tree edge is covered by at least one back edge.
   Thus, it suffices to consider only tree edges on the $y$--$\pi(a)$ path in $T$,
   where $y$ is the most distant proper ancestor of $x$
-  adjacent to $x$ by a back edge.
+  among those adjacent to $x$ by a back edge.
   \newline
   ($\Longrightarrow$)
   We show by contraposition.
@@ -1116,7 +1131,7 @@ Let $S \subsetneq V$ be
 a nonempty proper subset of $V$ that
 is either a singleton consisting of a leaf of $T$
 or a \maxTwoDegPath containing a leaf of $T$;
-let $x$ denote the leaf of $T$.
+let $x$ denote the leaf of $T$ in $S$.
 Since $x$ is the only vertex in $S$ that has back edges outgoing from it, then by \lemref{leaf_mrs},
 $S$ is a MinRS of $G$ if and only if,
 for any tree edge $(u,v)$ with $v \not\in S$,
@@ -1135,20 +1150,22 @@ that covers $(u,v)$.
     \Require A 2-edge-connected undirected graph $G=(V,E)$
     and its DFS-tree $T$ rooted at $r \in V$
     \Ensure All MinRSs of $G$ containing a leaf of $T$
-    \State Compute $\CovDesc{1}$ and $\CovDesc{2}$
-      for all tree edges;\label{codeline:preproc_covdesc}
-    \State \Initialise $\mathit{covering\_sets}_l := {}$ an array from leaves $l$ of $T$ to sets of tree edges;
+    \State Compute $\CovMult(uv)$, $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$
+      for all tree edges~$uv$;\label{codeline:preproc_covdesc}
+    \State \Initialise $\mathit{CS}_x := {}$ an array from vertices $x$ of $T$ to empty sets;
     \For{\textbf{each} tree edge $(u,v)$ in $E(T)$}
-      \State Compute the set
-      $X_{uv} :=
-      \{
-      x' \in V \mid
-        \text{There is back edge $(x', y')$ covering $(u,v)$}
-      \}$
-      from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
-      \State Append $(u,v)$ to $\mathit{covering\_sets}_l$ \textbf{if} $X_{uv}$ is a singleton $\{l\}$ and $l$ is a leaf of $T$
+    \If{$(\CovDesc{1}(uv))^2 = \CovMult(uv)\cdot\CovDesc{2}(uv)$}
+    \label{codeline:check_singleton}
+    \State $x :=id^{-1}(\CovDesc{1}(uv) / \CovMult(uv))$;
+    \State Append $(u,v)$ to $\mathit{CS}_x$ 
+    \EndIf
+      % \State
+      % $X_{uv} :
+      % \{x' \in V \mid \CovMult(uv)id(x')= (\CovDesc{1}(uv))^2 = \CovMult(uv)\cdot\CovDesc{2}(uv) \}$
+      % % from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
+      % \State Append $(u,v)$ to $\mathit{CS}_l$ \textbf{if} $X_{uv}$ is a singleton $\{l\}$ and $l$ is a leaf of $T$
       % \If{$X_{uv}$ is a singleton $\{x\}$ and $x$ is a leaf of $T$}
-      %     \State Append $(u,v)$ to $\mathit{covering\_sets}_x$
+      %     \State Append $(u,v)$ to $\mathit{CS}_x$
       % \EndIf
     \EndFor;\label{codeline:build_leaf_links}
     \State \Initialise $\MY := {}$ an empty set;
@@ -1157,12 +1174,13 @@ that covers $(u,v)$.
       \{l\} & \text{if } \deg_G(l) \geq 3, \\
       \text{the vertex set of the \maxTwoDegPath containing $l$} & \text{otherwise};
       \end{cases}$
-      \State $\textsc{is-MinRS} := \False$;
-      \For{\textbf{each} tree edge $(u,v)$ in $\mathit{covering\_sets}_l$}
+      \State $\textsc{is-MinRS} := \True$;
+      \For{\textbf{each} tree edge $(u,v)$ in $\mathit{CS}_l$}
+      \label{codeline:check_mrs_leaf}
         % \State $\textsc{is-MinRS} := \True$ \textbf{if} $u \not\in S$ and $v \not\in S$;
         % \Comment{You can break the loop here}
-        \If{$u \not\in S$ and $v \not\in S$}
-          \State $\textsc{is-MinRS} := \True$
+        \If{$v \not\in S$}
+          \State $\textsc{is-MinRS} := \False$
           \Comment{You can break the loop here}
         \EndIf
       \EndFor;
@@ -1189,35 +1207,45 @@ that covers $(u,v)$.
   Thus, we assume that $|V| \geq 3$.
   As the given graph is 2-edge-connected,
   each tree edge is covered by at least one back edge.
+  By \lemref{cov_info_use},
+  for any tree edge $(u,v)$,
+  line~\ref{codeline:check_singleton} checks whether
+  all back edges covering $(u,v)$
+  are outgoing from a single vertex $x$,
+  and if so,
+  $(u,v)$ is appended to $\mathit{CS}_x$.
+  Therefore, the end of the for-loop in line~\ref{codeline:build_leaf_links},
+  $\mathit{CS}_x$ contains all tree edges
+  that are covered only by back edges outgoing from $x$.
+  %
   Let $S \subsetneq V$ be 
   a nonempty proper subset of $V$ that
-  is either a singleton consisting of a leaf of $T$
-  or a \maxTwoDegPath containing a leaf of $T$;
-  let $x$ denote the leaf of $T$ in $S$.
+  forms a \maxTwoDegPath containing a leaf $l$ of $T$.
   By the discussion before the theorem,
   $S$ is a MinRS of $G$ if and only if,
   for any tree edge $(u,v)$ with $v \not\in S$,
-  there exists a back edge outgoing from other vertex than $x$
+  there exists a back edge outgoing from other vertex than $l$
   that covers $(u,v)$;
   which is equivalent to that
-  for any tree edge $(u,v)$ with $v \not\in S$,
-  $X_{uv}=\{x' \in V \mid \text{There is back edge $(x', y')$ covering $(u,v)$} \} \neq \{x\}$ holds.
-  By \lemref{cov_info_agg},
-  we can compute the \aggIDs
-  $\CovDesc{1}$ and $\CovDesc{2}$
-  for all tree edges.
+  there is no tree edge $(u,v)$ in $\mathit{CS}_l$
+  with $v \notin S$.
+  We check this condition for each leaf $l$ of $T$
+  in the for-loop starting from line~\ref{codeline:check_mrs_leaf}.
+  We consider all leaves of $T$,
+  which means that we can find all MinRSs containing a leaf of $T$.
 
   By \lemref{cov_info_agg},
-  we can compute $\CovDesc{1}$ and $\CovDesc{2}$
+  we can compute  $\CovMult$, $\CovDesc{1}$ and $\CovDesc{2}$
   for all tree edges in $O(n+m)$ time.
   For each tree edge $(u,v)$,
-  we can compute the set
-  $X_{uv}$ from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$
-  in constant time.
+  we can compute the vertex $x$ such that
+  all the back edge $(x',y')$ covering $(u,v)$ is outgoing from $x$ if such $x$ exists
+  from $\CovMult(uv)$, $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$
+  by \lemref{cov_info_use}.
   For each leaf $l$ of $T$,
   we can check whether $S$ is a MinRS of $G$
-  in time proportional to the size of $\mathit{covering\_sets}_l$.
-  Since the total size of $\mathit{covering\_sets}_l$
+  in time proportional to the size of $\mathit{CS}_l$.
+  Since the total size of $\mathit{CS}_l$
   for all leaves $l$ of $T$ is at most $O(n)$,
   we can check all candidates $S$ in $O(n)$ time.
   Thus, the total time complexity is $O(n+m)$.
@@ -1230,10 +1258,6 @@ In this section, we consider MinRSs that consist of only internal vertices of a 
 and form a \maxTwoDegPath in $G$.
 % In order to simplify discussions,
 % we introduce the `suppression' for \maxTwoDegPaths.
-% %そのために a != b であることを示す
-
-% 議論を簡単にするために, max2degpath の suppression を導入する
-% そのために, a != b であることを示す
 To simplify discussions,
 we introduce the \emph{suppression} for \maxTwoDegPaths.
 First, we show that the two \neighbours of the endpoints of a \maxTwoDegPath
