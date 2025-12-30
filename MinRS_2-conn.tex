@@ -124,14 +124,18 @@
 \newcommand{\True}{\textsc{True}\xspace}
 \newcommand{\False}{\textsc{False}\xspace}
 \newcommand{\id}{\mathit{id}}
-\newcommand{\CovDesc}[1]{\mathit{CovDesc}_{#1}}
-\newcommand{\CovAnc}[1]{\mathit{CovAnc}_{#1}}
+\newcommand{\CovDesc}[1]{\mathit{AggDesc}_{#1}}
+\newcommand{\CovAnc}[1]{\mathit{AggAnc}_{#1}}
 
-\newcommand{\maxTwoDegPath}{degree-two block\xspace}
+\newcommand{\maxTwoDegPath}{degree-two segment\xspace}
 \newcommand{\MaxTwoDegPath}{\MFUsentencecase{\maxTwoDegPath}\xspace}
-\newcommand{\MaxTwoDegPathCap}{Degree-Two Block\xspace}
+\newcommand{\MaxTwoDegPathCap}{Degree-Two Segment\xspace}
 \newcommand{\maxTwoDegPaths}{{\maxTwoDegPath}s\xspace}
 \newcommand{\MaxTwoDegPaths}{\MFUsentencecase{\maxTwoDegPaths}\xspace}
+\newcommand{\aggID}{aggregated identifier\xspace}
+\newcommand{\AggID}{\MFUsentencecase{\aggID}\xspace}
+\newcommand{\aggIDs}{{\aggID}s\xspace}
+\newcommand{\AggIDs}{\MFUsentencecase{\aggIDs}\xspace}
 
 
 \usepackage[british,american]{babel}
@@ -309,7 +313,7 @@ For a tree edge $uv$ and $i \in \{1, 2\}$, we define
 \qquad
 \CovAnc{i}(uv) \triangleq \sum_{(x,y) \in \Cov(uv)} \left(\id(y)\right)^i.
 \]
-We refer to these quantities as \emph{weighted cover information}.
+We refer to these quantities as \emph{\aggIDs}.
 
 % longest back edge outgoing from v
 % For a vertex $x \in V$,
@@ -355,7 +359,7 @@ we present efficient algorithms
 for computing various cover-related quantities
 in this section.
 % In \secref{cov_info_struct},
-% we establish several structural properties of weighted cover information.
+% we establish several structural properties of \aggIDs.
 % Although these properties are not immediate from the definitions,
 % they play a crucial role in the computation of MinRSs.
 %
@@ -369,7 +373,7 @@ for all tree edges in a 2-edge-connected undirected graph
 in $O(n+m)$ time.
 
 Before presenting the algorithms,
-we briefly illustrate how weighted cover information
+we briefly illustrate how \aggIDs
 can be used to detect structural properties
 of covering back edges.
 %
@@ -377,7 +381,7 @@ For a tree edge $uv$,
 we can determine whether all covering back edges
 outgo from the same descendant or
 ingo to the same ancestor
-using the weighted cover information.
+using the \aggIDs.
 %
 In order to show this,
 we first prove a general lemma on sequences of real numbers.
@@ -419,7 +423,7 @@ we first prove a general lemma on sequences of real numbers.
 
 Using \lemref{seq_all_equal},
 we can prove the following lemma
-on weighted cover information.
+on \aggIDs.
 \begin{lem}
   \label{lem:cov_info_use}
   Let $G=(V,E)$ be a 2-edge-connected undirected graph,
@@ -604,8 +608,8 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
   \begin{itemize}
   \item Cover multiplicity $\CovMult(uv)$;
   % \item Cover-source multiplicity $\CovSrc(uv)$;
-  \item Weighted cover information $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$; and
-  \item Weighted cover information $\CovAnc{1}(uv)$ and $\CovAnc{2}(uv)$.
+  \item \AggIDs{}$\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$; and
+  \item \AggIDs{}$\CovAnc{1}(uv)$ and $\CovAnc{2}(uv)$.
   \end{itemize}
 \end{lem}
 \begin{proof}
@@ -1199,7 +1203,7 @@ that covers $(u,v)$.
   for any tree edge $(u,v)$ with $v \not\in S$,
   $X_{uv}=\{x' \in V \mid \text{There is back edge $(x', y')$ covering $(u,v)$} \} \neq \{x\}$ holds.
   By \lemref{cov_info_agg},
-  we can compute the weighted cover information
+  we can compute the \aggIDs
   $\CovDesc{1}$ and $\CovDesc{2}$
   for all tree edges.
 
