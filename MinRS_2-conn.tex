@@ -550,7 +550,7 @@ we perform:
   it suffices to show that
   \algoref{diff_agg} correctly computes
   $
-  A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w).
+  A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w)
   $
   for each edge $\pi(v)v$.
   % the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
@@ -862,17 +862,17 @@ in a 2-edge-connected undirected graph.
 
 
 MinRSs in a 2-edge-connected undirected graph
-have been studied in \cite{ISYH.2022,ITO.2022,TH.2025}.
+have been studied in \cite{ISYH.2022,TH.2025}.
 In these works, they showed the following necessary condition for MinRSs.
-\begin{lem}[Observation 3 in \cite{ISYH.2022,ITO.2022}(, Lemma 7 in \cite{TH.2025})]
+\begin{lem}[Observation 3 in \cite{ISYH.2022} and Lemma 7 in \cite{TH.2025}]
   \label{lem:mrs_cond}
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$.
-  If a \nonempty proper subset $S \subset V$ is a MinRS of $G$,
+  If a \nonempty proper subset $S \subsetneq V$ is a MinRS of $G$,
   then,
   \begin{itemize}
-  \item $S$ forms \maxTwoDegPath in $G$;
+  \item $S$ forms a \maxTwoDegPath in $G$;
   or
-  \item $S$ is a singleton $\{v\}$ where $v \in V$.
+  \item $S$ is a singleton $\{v\}$, where $v \in V$.
   \end{itemize}
 \end{lem}
 By \lemref{mrs_cond},
@@ -909,7 +909,7 @@ this \categorisation is mutually exclusive.
 \begin{proof}
   By \lemref{mrs_cond},
   if $G$ has a MinRS containing $r$,
-  then it is either $\{r\}$ ($\deg_G(r) \geq 3$) or a \maxTwoDegPath~$P$ containing $r$ (otherwise).
+  then it is either $\{r\}$ (if $\deg_G(r) \geq 3$) or a \maxTwoDegPath~$P$ containing $r$ (otherwise).
   All we have to do is to check $G - r$ or $G - P$ for 2-edge-connectivity, which can be done in $O(n+m)$ time.
 \end{proof}
 
@@ -920,7 +920,7 @@ we focus on MinRSs that do not contain the root of the DFS-tree.
 % rootをふくない pathなどの性質を述べる
 Before going into details,
 we show a basic property of \maxTwoDegPaths not containing the root of the DFS-tree
-for the sake of simplifying discussions in the following sections.
+for the sake of simplifying discussions in the following subsections.
 \begin{lem}
   \label{lem:max2degpath_props}
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
@@ -931,7 +931,7 @@ for the sake of simplifying discussions in the following sections.
   \begin{enumerate}[label={\rm(\roman*)}]
   \item
   No internal vertex of $T$
-  that is an endopoint of any back edge
+  that is an endpoint of any back edge
   appears in $P$; and
   \item The sequence $v_1, v_2, \ldots, v_k$ appears in this order or its reverse order
   on a root-to-leaf path in $T$.
@@ -943,7 +943,7 @@ for the sake of simplifying discussions in the following sections.
 \begin{proof}
   (i)
   Since every internal vertex of $T$ has the parent and at least one child,
-  if an internal vertex of $T$ is an endopoint of some back edge,
+  if an internal vertex of $T$ is an endpoint of some back edge,
   then the degree in $G$ is at least three.
   Thus, such a vertex cannot appear in $P$.
   \newline
@@ -957,7 +957,7 @@ for the sake of simplifying discussions in the following sections.
 
 \subsection{MinRSs Containing DFS-Tree Leaf}
 \label{sec:leaf_mrs}
-In this section, we consider MinRSs that consist of only leaves of a DFS-tree.
+In this subsection, we consider MinRSs that consist of only leaves of a DFS-tree.
 
 We first show a basic property of leaves in a DFS-tree
 of a 2-edge-connected undirected graph.
@@ -1140,9 +1140,9 @@ that covers $(u,v)$.
       \{
       x' \in V \mid
         \text{There is back edge $(x', y')$ covering $(u,v)$}
-      \}
-      $from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
-      \State Append $(u,v)$ to $\mathit{covering\_sets}_l$ \textbf{if} $X_{uv}$ is a singleton $\{l\}$ and $l$ is a leaf of $T$;
+      \}$
+      from $\CovDesc{1}(uv)$ and $\CovDesc{2}(uv)$;
+      \State Append $(u,v)$ to $\mathit{covering\_sets}_l$ \textbf{if} $X_{uv}$ is a singleton $\{l\}$ and $l$ is a leaf of $T$
       % \If{$X_{uv}$ is a singleton $\{x\}$ and $x$ is a leaf of $T$}
       %     \State Append $(u,v)$ to $\mathit{covering\_sets}_x$
       % \EndIf
@@ -1150,19 +1150,19 @@ that covers $(u,v)$.
     \State \Initialise $\MY := {}$ an empty set;
     \For{\textbf{each} leaf $l$ of $T$}
       \State $S := \begin{cases}
-      \{l\} & \text{if } \deg_G(l) \geq 3 \\
-      \text{the vertex set of the \maxTwoDegPath containing $l$} & \text{otherwise}
-      \end{cases}$;
-      \State $\textsc{is-MinRS} := \True$;
+      \{l\} & \text{if } \deg_G(l) \geq 3, \\
+      \text{the vertex set of the \maxTwoDegPath containing $l$} & \text{otherwise};
+      \end{cases}$
+      \State $\textsc{is-MinRS} := \False$;
       \For{\textbf{each} tree edge $(u,v)$ in $\mathit{covering\_sets}_l$}
-        \State $\textsc{is-MinRS} := \False$ \textbf{if} $u \not\in S$ and $v \not\in S$;
-        \Comment{You can break the loop here}
-        % \If{$u \not\in S$ and $v \not\in S$}
-        %   \State $\mathit{is\_MinRS} := \False$
-        %   \Comment{You can break the loop here}
-        % \EndIf
+        % \State $\textsc{is-MinRS} := \True$ \textbf{if} $u \not\in S$ and $v \not\in S$;
+        % \Comment{You can break the loop here}
+        \If{$u \not\in S$ and $v \not\in S$}
+          \State $\textsc{is-MinRS} := \True$
+          \Comment{You can break the loop here}
+        \EndIf
       \EndFor;
-      \State $\cupappend{\MY}{\{S\}}$ \textbf{if} $\mathit{is\_MinRS}$;
+      \State $\cupappend{\MY}{\{S\}}$ \textbf{if} $\textsc{is-MinRS}$
     \EndFor;
     \State \textbf{output} $\MY$
   \end{algorithmic}
@@ -1300,7 +1300,7 @@ Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if
   Next, we show that
   $\CovMult(e_P)$ in $G_P$ equals any $\CovMult(uv)$ in $G$
   for a tree edge $(u,v)$ on the $a$--$b$ path in $T$.
-  No vertex in $P$ is an endopoint of any back edge by \lemref{max2degpath_props}(i).
+  No vertex in $P$ is an endpoint of any back edge by \lemref{max2degpath_props}(i).
   Thus, any back edge in $G$ corresponds to a back edge in $G_P$ and vice versa.
   Moreover,
   a back edge covers $e_P$ in $G_P$
@@ -1369,7 +1369,6 @@ Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if
   $G_P$ has no 2-edge-cut containing $e_P$
   $\iff$ (iii),
   where the last equivalence follows by \lemref{2edgecut_covmult}.
-TODO
 \end{proof}
 
 \begin{thm}
