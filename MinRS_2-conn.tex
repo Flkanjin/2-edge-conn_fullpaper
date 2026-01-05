@@ -232,10 +232,13 @@ we may abbreviate an edge $\{u,v\} \in E$ as $uv$ (or equivalently $vu$)
 for simplicity.
 % neighbours
 For a vertex $v \in V$, we denote by $N_G(v)$ the set of \neighbours of $v$. 
-Let $S \subseteq V$ be a subset of vertices.
-We denote by $N_G(S) = \bigcup_{v \in S} N_G(v) \setminus S$,
-% induced subgraph
+We denote by $N_G(S) := \bigcup_{v \in S} N_G(v) \setminus S$,
 the set of open \neighbours of $S$ in $G$.
+Let $S \subseteq V$ be a subset of vertices.
+For a disjoint subsets $X, Y \subsetneq V$,
+$E_G(X,Y) := \{uv \in E \mid u \in X, v \in Y\}$
+and when $Y = \diffset{V}{X}$ we simply write $E_G(X)$ instead of $E_G(X, \diffset{V}{X})$.
+% induced subgraph
 We denote by $G[S]$ the subgraph of $G$
 induced by $S$.
 We denote by $G-S$ the subgraph obtained by
@@ -254,7 +257,6 @@ We may denote the path $P$ by $v_1 \to v_2 \to \cdots \to v_k$.
 A \emph{\maxTwoDegPath} in $G$ is a maximal path
 whose vertices all have degree two in $G$.
 Note that a \maxTwoDegPath may consist of a single vertex.
-
 
 \subsection{DFS-Trees and Related Notions}
 \label{sec:prel_dfs}
@@ -285,7 +287,6 @@ we denote this by $\parent(v)=u$.
 % children set
 We denote by $\Childset(u)$ the set of children of $u$ in $T$.
 
-
 % % DFS-index
 % During the DFS,
 % each vertex is assigned a unique integer called \emph{DFS-index},
@@ -311,7 +312,7 @@ Note that every tree edge is covered by at least one back edge
 if $G$ is 2-edge-connected.
 For a tree edge $uv$, we denote by
 $
-\Cov(uv)=\{(x,y)\in E \mid (x,y)\ \text{is a back edge covering}\ uv\}
+\Cov(uv)=\{(x,y)\in E \mid \text{$(x,y)$ is a back edge covering $uv$}\}
 $
 the set of back edges that cover $uv$.
 We refer to $\CovMult(uv) \triangleq |\Cov(uv)|$ as the \emph{cover multiplicity}
@@ -434,9 +435,9 @@ we first prove a general lemma on sequences of real numbers.
     \right]
     = \sum_{i=1}^{q-1} \sum_{j=i+1}^{q} \left(\alpha_i - \alpha_j\right)^2.
   \end{align*}
-  Since each term in the last summation is \nonnegative, 
-  the entire summation is equal to zero if and only if
-  $\alpha_i = \alpha_j$ for all $i,j \in \{1, \dots, q\}$.
+  The entire summation is equal to zero if and only if
+  $\alpha_i = \alpha_j$ for all $i,j \in \{1, \dots, q\}$
+  since each term $\left(\alpha_i - \alpha_j\right)^2$ is \nonnegative.
 \end{proof}
 
 Using \lemref{seq_all_equal},
@@ -514,7 +515,7 @@ which will be used to represent the effect of update operations.
   \]
 \end{lem}
 \begin{proof}
-  It suffices to show the claim for a single update operation $(x,y,\alpha)$,
+  It suffices to show the claim for a single update operation $(x,y,\alpha)$
   since the contributions of multiple operations are additive.
   By the definition of $\Delta$,
   the operation contributes $+\alpha$ to $\Delta(x)$ and $-\alpha$ to $\Delta(y)$.
@@ -530,8 +531,8 @@ which will be used to represent the effect of update operations.
   If neither $x$ nor $y$ is in $T_v$,
   then the $x$--$y$ path does not pass through $\parent(v)v$,
   and again contributes $0$ to the sum.
-  Since $y$ is a proper ancestor of $x$,
-  the case with $x \not\in V(T_v)$ and $y \in V(T_v)$ cannot occur.
+  The case with $x \not\in V(T_v)$ and $y \in V(T_v)$ cannot occur 
+  since $y$ is a proper ancestor of $x$.
 
   Therefore, the only update operations that contribute a \nonzero amount are those
   whose $x$--$y$ path passes through $\parent(v)v$,
@@ -614,13 +615,14 @@ which will be used to represent the effect of update operations.
   = \sum_{z \in V(T_v)} \Delta(z).
   \]
 
-  Since each update operation is processed in constant time,
+  Each update operation is processed in constant time,
+  which means that
   the total time for all $q$ update operations is $O(q)$.
   We visit each vertex exactly once,
   and consider all edges exactly once,
   which means we can correctly compute the final values for all edges.
-  Since we traverse only edges in $T$,
-  we can execute the aggregation in $O(n)$ time.
+  We can execute the aggregation in $O(n)$ time
+  since we traverse only edges in $T$.
 \end{proof}
 
 \subsection{Computation of Cover Information}
@@ -661,7 +663,8 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
   \item For $\CovDesc{i}(uv)$, set $\alpha := \left(\id(x)\right)^i$ for $i \in \{1, 2\}$; and
   \item For $\CovAnc{i}(uv)$, set $\alpha := \left(\id(y)\right)^i$ for $i \in \{1, 2\}$.
   \end{itemize}
-  Since there are $O(m)$ back edges in $G$,
+  There are $O(m)$ back edges in $G$, 
+  so
   we can perform $O(m)$ update operations on $T$.
   By \lemref{diff_agg_algo},
   we can compute the final values for all tree edges in $O(n+m)$ time.
@@ -935,7 +938,8 @@ and collecting all singleton vertex sets.
   Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$
   and $T$ be a DFS-tree of $G$ rooted at $r\in V$.
   We can determine whether $G$ has a MinRS containing $r$
-  and find such a MinRS in $O(n+m)$ time.
+  and find such a MinRS if exists
+  in $O(n+m)$ time.
 \end{lem}
 \begin{proof}
   By \lemref{mrs_cond},
@@ -959,29 +963,32 @@ for the sake of simplifying discussions in the following subsections.
   Then, the following hold:
   \begin{enumerate}[label={\rm(\roman*)}]
   \item
-  No internal vertex of $T$
+  no internal vertex of $T$
   that is an endpoint of any back edge
   appears in $P$; and
-  \item The sequence $v_1, v_2, \ldots, v_k$ appears in this order or its reverse order
-  on a root-to-leaf path in $T$.
-  \item % P に Tのleaf が現れるなら, それは v1 か vk であり、一方のみである
-  If $P$ contains a leaf of $T$,
-  then it is either $v_1$ or $v_k$, but not both.
+  % \item The sequence $v_1, v_2, \ldots, v_k$ appears in this order or its reverse order
+  % on a root-to-leaf path in $T$.
+  \item exactly one of $v_1 \to v_2 \to \cdots \to v_k$
+    and $v_k \to v_{k-1} \to \cdots \to v_1$
+    is a path on $T$.
   \end{enumerate}
 \end{lem}
 \begin{proof}
   (i)
-  Since every internal vertex of $T$ has the parent and at least one child,
-  if an internal vertex of $T$ is an endpoint of some back edge,
+  Every internal vertex of $T$ has the parent and at least one child.
+  If an internal vertex of $T$ is an endpoint of some back edge,
   then the degree in $G$ is at least three.
   Thus, such a vertex cannot appear in $P$.
   \newline
   (ii)
-  In the DFS traversal that constructs $T$,
+  By (i),
+  all vertices in $P$ other than $v_1$ and $v_k$
+  has no \neighbours outside $P$ in $G$.
+  Thus, in the DFS traversal that constructs $T$,
   the vertices in $P$ are visited one by one
   without visiting any other vertex in between.
   % \newline
-  (iii) is immediate from (ii).
+  % (iii) is immediate from (ii).
 \end{proof}
 
 Based on \lemref{mrs_cond},
@@ -1000,9 +1007,8 @@ has degree two in $G$,
 then $G$ is a cycle and has no MinRS.
 Otherwise, an MinRS containing the root of the DFS-tree
 contains no leaf of the DFS-tree.
-By \lemref{max2degpath_props}(iii),
-a MinRS containing a leaf of the DFS-tree
-contains exactly one leaf of the DFS-tree.
+By \lemref{max2degpath_props}(ii),
+a MinRS containing at most one leaf of the DFS-tree.
 Thus,
 this \categorisation is mutually exclusive and exhaustive.
 
@@ -1024,8 +1030,8 @@ of a 2-edge-connected undirected graph.
   $G - v$ or $G - P$ is connected.
 \end{lem}
 \begin{proof}
-  Since $T$ is a spanning tree of $G$,
-  every path in $T$ also exists in $G$.
+  Every path in $T$ also exists in $G$
+  since $T$ is a spanning tree of $G$.
   For any leaf $v\in \Leafset(T)$ or
   any \maxTwoDegPath~$P$ containing a leaf of $T$,
   $T - v$ or $T - P$ is connected.
@@ -1088,32 +1094,47 @@ of a 2-edge-connected undirected graph.
 
 \begin{lem}
   \label{lem:leaf_mrs}
-  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$,
-  $T$ be a DFS-tree of $G$ rooted at $r\in V$
-  and $x \in \Leafset(T)$.
+  Let $G=(V,E)$ be a 2-edge-connected undirected graph with $|V|\geq 3$.
+  Let $T$ be a DFS-tree of $G$ rooted at $r\in V$
+  and let $x \in \Leafset(T)$.
   Let $S \subsetneq V$ be 
+  either
   a nonempty proper subset of $V$ that
-  forms the $a$--$x$ \maxTwoDegPath,
-  where $a \in V \setminus \{r,x\}$ is an ancestor of $x$ in $T$.
-  Note that $a = x$ if $S$ is a singleton.
-  Then, $S$ is a MinRS of $G$ if and only if,
-  for any tree edge $(u,v)$ with $v \not\in S$,
-  there exists a back edge outgoing from some vertex in $\diffset{V}{S}$
-  that covers $(u,v)$.  
+  forms the \maxTwoDegPath that visits $x$
+  when $\deg_G(x) = 2$;
+  or $S = \{x\}$ when $\deg_G(x) \geq 3$.
+  %
+  The following are equivalent:
+  \begin{enumerate}[label={\rm(\roman*)}]
+    \item $S$ is a MinRS of $G$;
+    \item for any tree edge $(u,v)$ with $v \not\in S$,
+      there exists a back edge outgoing from some vertex in $\diffset{V}{S}$
+      that covers $(u,v)$; and
+    \item for any tree edge $(u,v)$ with $v \not\in S$,
+      there exists a back edge outgoing from some vertex in $\diffset{V}{\{x\}}$
+      that covers $(u,v)$.
+  \end{enumerate}
+% 
+  % Then, $S$ is a MinRS of $G$ if and only if,
+  % for any tree edge $(u,v)$ with $v \not\in S$,
+  % there exists a back edge outgoing from some vertex in $\diffset{V}{S}$
+  % that covers $(u,v)$.  
 \end{lem}
 \begin{proof}
-  By \lemref{max2degpath_props},
+  By \lemref{max2degpath_props}(ii),
+  $S$ forms a path in $T$, which leads to that
   $S$ contains exactly one leaf of $T$ and
   $S$ appears as a path from some vertex~$a$ to its descendant~$x$ in $T$.
   (If $S$ is a singleton, then $a = x$.)
   By the definition of $S$, $x$ is a leaf of $T$.
-  Since $G$ is 2-edge-connected,
-  every tree edge is covered by at least one back edge.
+  % Since $G$ is 2-edge-connected,
+  Every tree edge is covered by at least one back edge
+  due to the 2-edge-connectivity of $G$.
   Thus, it suffices to consider only tree edges on the $y$--$\parent(a)$ path in $T$,
   where $y$ is the most distant proper ancestor of $x$
   among those adjacent to $x$ by a back edge.
   \newline
-  ($\Longrightarrow$)
+  ($\text{(i)}\Longrightarrow\text{(ii)}$)
   We show by contraposition.
   Suppose that there exists a tree edge $(u,v)$ on the $y$--$\parent(a)$ path in $T$
   that is not covered by any back edge outgoing from a vertex  other than those in $S$.
@@ -1121,14 +1142,14 @@ of a 2-edge-connected undirected graph.
   a proper ancestor of $u$ in $G - S$,
   which means that $uv$ is a bridge in $G - S$.
   \newline
-  ($\Longleftarrow$)
+  ($\text{(ii)}\Longrightarrow\text{(i)}$)
   By \lemref{mrs_cond},
   it suffices to show that $G - S$ is 2-edge-connected.
   By \lemref{leaf_not_ap},
   $G - S$ is connected.
   We show that there is no bridge in $G - S$.
   Every back edge $(x', y') \in \diffset{E}{E(T)}$
-  with $x', y' \not\in S$ is not a bridge in $G - S$,
+  with $x', y' \not\in S$ is not a bridge in $G - S$
   since $x'y'$ and the $y'$--$x'$ path in $T$ form a cycle in $G - S$.
   Next, we consider tree edges in $G - S$.
   For any tree edge not on the $y$--$\parent(a)$-path in $T$,
@@ -1142,6 +1163,13 @@ of a 2-edge-connected undirected graph.
   which means that such a tree edge is not a bridge in $G - S$.
   Thus, there is no bridge in $G - S$,
   and hence, $G - S$ is 2-edge-connected.
+  \newline
+  ($\text{(ii)}\Longleftrightarrow\text{(iii)}$)
+  It is immediate when $S$ is a singleton $\{x\}$.
+  When $S$ is a \maxTwoDegPath containing $x$,
+  $x$ is the only vertex in $S$ that is a leaf of $T$.
+  Thus, by \lemref{max2degpath_props}(i),
+  only $x$ has back edges outgoing from it.
 \end{proof}
 
 
@@ -1160,22 +1188,7 @@ of a 2-edge-connected undirected graph.
 % tree edges (u,v) with v notin S
 % covering back edge (x1,y1), (x2,y2), ..., (xk,yk)
 % → x1 != x or x2 != x or ... or xk != x
-Let $S \subsetneq V$ be 
-a nonempty proper subset of $V$ that
-is either a singleton consisting of a leaf of $T$
-or a \maxTwoDegPath containing a leaf of $T$;
-let $x$ denote the leaf of $T$ in $S$.
-Since $x$ is the only vertex in $S$ that has back edges outgoing from it, then by \lemref{leaf_mrs},
-$S$ is a MinRS of $G$ if and only if,
-for any tree edge $(u,v)$ with $v \not\in S$,
-there exists a back edge outgoing from other vertex than $x$
-that covers $(u,v)$.
 
-
-% 次のような流れでアルゴリズムを構成する:
-  % 前計算 として, 各 tree edge について CovDesc1, CovDesc2 を計算する (O(n+m) 時間)
-  % 各 tree edge について, CovDesc1, CovDesc2から $\{x' \in V \mid \text{There is back edge $(x', y')$ covering $(u,v)$} \}$ を求め, 葉シングルトンであれば、その葉 に tree edge へのリンクを貼る O(n) 時間
-  % 各候補S (葉x) について x に結びついている tree edgeの中で 端点がどちらもSには入らないものがあれば MinRS でない; 全て 端点のうち少なくとも一方がSに入るなら MinRS である O(n) 時間
 \begin{algorithm}[t]
   \caption{Computation of All MinRSs Containing a Leaf of a DFS-tree}
   \label{alg:leaf_mrs}
@@ -1254,7 +1267,7 @@ that covers $(u,v)$.
   Let $S \subsetneq V$ be 
   a nonempty proper subset of $V$ that
   forms a \maxTwoDegPath containing a leaf $l$ of $T$.
-  By the discussion before the theorem,
+  By $\text{(i)}\Longleftrightarrow\text{(iii)}$ of  \lemref{leaf_mrs},
   $S$ is a MinRS of $G$ if and only if,
   for any tree edge $(u,v)$ with $v \not\in S$,
   there exists a back edge outgoing from other vertex than $l$
@@ -1278,9 +1291,9 @@ that covers $(u,v)$.
   For each leaf $l$ of $T$,
   we can check whether $S$ is a MinRS of $G$
   in time proportional to the size of $\mathit{CS}_l$.
-  Since the total size of $\mathit{CS}_l$
-  for all leaves $l$ of $T$ is at most $O(n)$,
-  we can check all candidates $S$ in $O(n)$ time.
+  We can check all candidates $S$ in $O(n)$ time
+  since the total size of $\mathit{CS}_l$
+  for all leaves $l$ of $T$ is at most $O(n)$.
   Thus, the total time complexity is $O(n+m)$.
 \end{proof}
 
@@ -1377,19 +1390,25 @@ Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if
   Then, $e$ belongs to some 2-edge-cut if and only if
   $\CovMult(e) = 1$ in $G$.
   Moreover, if $e$ belongs to some 2-edge-cut,
-  then there exists a unique tree edge $f \neq e$ such that
-  $E(V(T_v)) = \{e,f\}$ holds.
+  then there exists a unique back edge $f$ such that
+  $E_G(V(T_v)) = \{e,f\}$ holds.
 \end{lem}
 \begin{proof}
   Let $X := V(T_v)$.
   ($\Longrightarrow$)
-  Let $\{e, f\}$ be a 2-edge-cut containing $e$ for some tree edge $f \neq e$.
-  In $G - e$,
-  $X$ and $\diffset{V}{X}$ are connected separately.
-  Since $G - \{e, f\}$ is disconnected,
-  the connected components of $G - \{e, f\}$ are exactly $X$ and $\diffset{V}{X}$.
-  Thus, $f$ is the only back edge covering $e$ in $G$,
-  which means that $\CovMult(e) = 1$.
+  Let $\{e, f\}$ be a 2-edge-cut containing $e$ for some edge $f \neq e$.
+  Here, $f$ must be a back edge;
+  otherwise, i.e., if both $e$ and $f$ are tree edges,
+  then $T - \{e, f\}$ has three connected components,
+  and there would be at least one edge between any two of them
+  in $G$,
+  since every tree edge is covered by at least one back edge by the 2-edge-connectivity of $G$,
+  which contradicts that $\{e, f\}$ is a 2-edge-cut.
+  The removal of a back edge does not affect the connectivity within the connected components $X$ and $\diffset{V}{X}$ of $T - e$ in $G$,
+  since any pair of vertices in each component
+  are still connected via the tree edges in $T$.
+  Thus, $f$ must disconnect $X$ from $\diffset{V}{X}$ in $G - e$,
+  which means that $f$ is the only back edge covering $e$ in $G$.
   \newline
   ($\Longleftarrow$)
   Suppose that $\CovMult(e) = 1$.
@@ -1403,7 +1422,7 @@ Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if
   Moreover,
   if $e$ belongs to some 2-edge-cut,
   then the above argument shows that
-  there exists a unique tree edge $f \neq e$ such that
+  there exists a unique back edge $f \neq e$ such that
   $E_G(V(T_v)) = \{e,f\}$ holds.
 \end{proof}
 
