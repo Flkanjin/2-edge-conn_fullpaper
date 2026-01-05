@@ -126,7 +126,9 @@
 \newcommand{\id}{\mathit{id}}
 \newcommand{\CovDesc}[1]{\mathit{AggDesc}_{#1}}
 \newcommand{\CovAnc}[1]{\mathit{AggAnc}_{#1}}
-\newcommand{\Leafset}{V_{\mathrm{leaf}}}
+\newcommand{\Leafset}{\mathit{Leaf}}
+\newcommand{\parent}{\pi}
+\newcommand{\Childset}{\mathit{Ch}}
 
 \newcommand{\maxTwoDegPath}{degree-two segment\xspace}
 \newcommand{\MaxTwoDegPath}{\MFUsentencecase{\maxTwoDegPath}}
@@ -137,6 +139,7 @@
 \newcommand{\AggID}{\MFUsentencecase{\aggID}}
 \newcommand{\aggIDs}{{\aggID}s\xspace}
 \newcommand{\AggIDs}{\MFUsentencecase{\aggIDs}}
+
 
 
 \usepackage[british,american]{babel}
@@ -240,10 +243,18 @@ removing $S$ and all edges to incident to $S$,
 that is, $G - S = G[V-S]$.
 If $S = \{v\}$,
 then we simply write $G-v$ instead of $G - \{v\}$.
+%path
+A \emph{path} $P$ in $G$ is a sequence of distinct vertices
+$(v_1, v_2, \dots, v_k)$
+such that $v_i v_{i+1} \in E$ for all $i = 1, 2, \dots, k-1$.
+We refer to $v_1$ and $v_k$ as the \emph{endpoint}s of $P$.
+% v_1 -> v_2 -> ... -> v_k
+We may denote the path $P$ by $v_1 \to v_2 \to \cdots \to v_k$.
 % \maxTwoDegPath
 A \emph{\maxTwoDegPath} in $G$ is a maximal path
 whose vertices all have degree two in $G$.
 Note that a \maxTwoDegPath may consist of a single vertex.
+
 
 \subsection{DFS-Trees and Related Notions}
 \label{sec:prel_dfs}
@@ -268,8 +279,12 @@ then we say that $u$ is a \emph{proper ancestor} of $v$,
 and $v$ is correspondingly
 a (\emph{proper}) \emph{descendant} of $u$.
 If $uv$ is a tree edge and $u$ is an ancestor of $v$,
-then $u$ is the \emph{parent} of $v$;
-we denote this by $\pi(v)=u$.
+then $u$ is the \emph{parent} of $v$
+and $v$ is a \emph{child} of $u$;
+we denote this by $\parent(v)=u$.
+% children set
+We denote by $\Childset(u)$ the set of children of $u$ in $T$.
+
 
 % % DFS-index
 % During the DFS,
@@ -280,18 +295,18 @@ we denote this by $\pi(v)=u$.
 
 % orientation of edges
 We may orient edges based on the DFS-tree $T$:
-for a tree edge $\pi(v)v$, we orient it from $\pi(v)$ to $v$; and
+for a tree edge $\parent(v)v$, we orient it from $\parent(v)$ to $v$; and
 for a back edge $xy$, we orient it from the descendant to the ancestor.
 We may write $(u,v)$ and $(x,y)$ to indicate the orientation of edge $uv$ and $xy$,
 and refer to it as the \emph{outgoing edge} from $u$ or $x$
 and the \emph{incoming edge} to $v$ or $y$.
 
 %
-We say that a tree edge $\pi(v)v$ is \emph{covered} by a back edge
+We say that a tree edge $\parent(v)v$ is \emph{covered} by a back edge
 $e=(x,y)$ if $x$ is a descendant of $v$ and
 $y$ is a proper ancestor of $v$
-(an ancestor of $\pi(v)$).
-In this case, $e$ together with $\pi(v)v$ forms part of a cycle in $G$.
+(an ancestor of $\parent(v)$).
+In this case, $e$ together with $\parent(v)v$ forms part of a cycle in $G$.
 Note that every tree edge is covered by at least one back edge
 if $G$ is 2-edge-connected.
 For a tree edge $uv$, we denote by
@@ -321,7 +336,7 @@ We refer to these quantities as \emph{\aggIDs}.
 % longest back edge outgoing from v
 % For a vertex $x \in V$,
 % every vertex~$y$ with a back edge $(x, y)$
-% lies on the unique $\pi(x)$--$r$ path in $T$.
+% lies on the unique $\parent(x)$--$r$ path in $T$.
 % Among such vertices~$y$,
 % let  $y^*$ denote
 % %  the one with the smallest DFS-index,
@@ -470,26 +485,32 @@ after performing a sequence of such update operations.
 
 In order to achieve this goal efficiently,
 we use a difference-based approach.
-We associate each vertex $v$ in $T$
-with an auxiliary value $\Delta(v)$, initially set to zero.
-For each update operation $(x,y,\alpha)$,
-we perform:
-\[
-  \plusassign{\Delta(x)}{\alpha},
-  \qquad
-  \minusassign{\Delta(y)}{\alpha}.
-\]
+Specifically, we introduce an auxiliary value $\Delta(v)$
+for each vertex $v$ in $T$,
+which will be used to represent the effect of update operations.
 
 \begin{lem}
   \label{lem:diff_agg}
-  Let $T$ be a rooted tree and
-  each edge $e$ store an initial value $A(e)$.
-  After performing a sequence of update operations
-  represented as triples $(x,y,\alpha)$ on a rooted tree $T$,
-  for each edge $\pi(v)v$, 
+  Let $T$ be a rooted tree.
+  Each edge $e$ of $E$ stores an initial value $A(e)$ from an additive abelian group.
+  For each vertex $v$ in $T$,
+  let $\Delta(v)$ be an auxiliary value,
+  initially set to zero.
+
+  For each update operation $(x,y,\alpha)$,
+  where $y$ is an  ancestor of $x$ in $T$,
+  we perform:
+  \[
+    \plusassign{\Delta(x)}{\alpha},
+    \qquad
+    \minusassign{\Delta(y)}{\alpha}.
+  \]
+
+  Then, after processing a sequence of update operations,
+  for each edge $\parent(v)v$, 
   the updated value is given by
   \[
-  A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w).
+  A(\parent(v)v) + \sum_{w \in V(T_v)} \Delta(w).
   \]
 \end{lem}
 \begin{proof}
@@ -500,20 +521,20 @@ we perform:
   We examine how such an operation contributes to the sum~$\sum_{w \in V(T_v)} \Delta(w)$.
 
   If $x \in V(T_v)$ and $y \not\in V(T_v)$,
-  then the $x$--$y$ path passes through $\pi(v)v$,
+  then the $x$--$y$ path passes through $\parent(v)v$,
   and the operation contributes $+\alpha$ to the sum.
   If both $x$ and $y$ belong to $V(T_v)$,
-  then the $x$--$y$ path does not pass through $\pi(v)v$,
+  then the $x$--$y$ path does not pass through $\parent(v)v$,
   and its $+\alpha$ and $-\alpha$ contributions cancel within $T_v$,
   yielding a total contribution of $0$.
   If neither $x$ nor $y$ is in $T_v$,
-  then the $x$--$y$ path does not pass through $\pi(v)v$,
+  then the $x$--$y$ path does not pass through $\parent(v)v$,
   and again contributes $0$ to the sum.
   Since $y$ is a proper ancestor of $x$,
   the case with $x \not\in V(T_v)$ and $y \in V(T_v)$ cannot occur.
 
   Therefore, the only update operations that contribute a \nonzero amount are those
-  whose $x$--$y$ path passes through $\pi(v)v$,
+  whose $x$--$y$ path passes through $\parent(v)v$,
   and each such operation contributes exactly $+\alpha$.
 \end{proof}
 
@@ -527,29 +548,32 @@ we perform:
     \Ensure The final values for all edges
     % % \State \Initialise $\Delta(v) := 0$ and $A(e) := 0$
     % for all $v \in V(T)$ and $e \in E(T)$;
-    \State \Initialise $\Delta(v) := 0$ for all $v \in V(T)$ and $\mathit{value}(e) := A(e)$ for all $e \in E(T)$;
+    \State \Initialise $\Delta(v) := 0$ for all $v \in V(T)$ and $\mathit{diff}(e) := 0$ for all $e \in E(T)$;
     \For{\textbf{each} update operation $(x,y,\alpha)$}
       \State $\plusassign{\Delta(x)}{\alpha}$;
       $\minusassign{\Delta(y)}{\alpha}$
+      \label{codeline:diff_agg_update}
     \EndFor;
-    \For{\textbf{each} child $w$ of the root $r$ in $T$}
+    \For{\textbf{each} child $w \in \Childset(r)$ of the root $r$ in $T$}
       \State Execute \Call{Aggregate-DFS}{$w$}
     \EndFor;
-    \State \textbf{output} $\mathit{value}(e)$ for all edges $e$ in $E(T)$
+    \State \textbf{output} $A(e) + \mathit{diff}(e)$ for all edges $e$ in $E(T)$
 
     \\\Procedure{Aggregate-DFS}{$v$}
-    \State $\plusassign{\mathit{value}(\pi(v)v)}{\Delta(v)}$;
-    \For{\textbf{each} child $w$ of $v$ in $T$}
+    \State $\mathit{diff}(\parent(v)v) := \Delta(v)$;
+    \label{codeline:diff_agg_diff_update_one_Delta}
+    \For{\textbf{each} child $w \in \Childset(v)$ in $T$}
       \State Execute \Call{Aggregate-DFS}{$w$};
-      \State $\plusassign{\mathit{value}(\pi(v)v)}{\mathit{value}(vw)}$
-    \EndFor
+      \State $\plusassign{\mathit{diff}(\parent(v)v)}{\mathit{diff}(vw)}$
+    \EndFor\label{codeline:diff_agg_diff_update_children_end}
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
 
 \begin{lem}
   \label{lem:diff_agg_algo}
-  Given a rooted tree $T$ with $n$ vertices
+  Given a rooted tree $T$ with $n$ vertices,
+  initial values $A(e)$ for all edges $e$ in $E(T)$,
   and a sequence of $q$ update operations,
   \algoref{diff_agg} computes the final values
   for all edges in $O(q+n)$ time.
@@ -559,27 +583,36 @@ we perform:
   it suffices to show that
   \algoref{diff_agg} correctly computes
   $
-  A(\pi(v)v) + \sum_{w \in V(T_v)} \Delta(w)
+  A(\parent(v)v) + \sum_{w \in V(T_v)} \Delta(w)
   $
-  for each edge $\pi(v)v$.
+  for each edge $\parent(v)v$.
   % the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
+  For $\Delta$, line~\ref{codeline:diff_agg_update}
+  is identical to that in \lemref{diff_agg}.
 
+  Thus, it remains to show that
+  \Call{Aggregate-DFS}{$v$} correctly computes
+  $\mathit{diff}(\parent(v)v) = \sum_{w \in V(T_v)} \Delta(w)$
+  for each non-root vertex $v$ in $T$.
   We first show the case with $v$ being a leaf.
-  In this case, since there is no child of $v$ in $T$,
-  % the algorithm returns $A(uv) = \Delta(v)$.
-  the algorithm sets $\mathit{value}(\pi(v)v) = A(\pi(v)v) + \Delta(v)$.
+  In this case, 
+  the only coputation in \Call{Aggregate-DFS}{$v$} is in line~\ref{codeline:diff_agg_diff_update_one_Delta}
+  since there is no child of $v$ in $T$;
+  we have $\mathit{diff}(\parent(v)v) = \Delta(v)$.
   
   Next, we consider the case other than the leaf case. 
   We assume that, for any child $w$ of $v$ in $T$,
-  \Call{Aggregate-DFS}{$w$} correctly computes
+  \Call{Aggregate-DFS}{$w$} correctly computes $\mathit{diff}(vw) = \sum_{z \in V(T_w)} \Delta(z)$,
   the sum of the auxiliary values $\Delta$ for all vertices in $T_w$.
-  Then, the algorithm computes
+  Then, lines~\ref{codeline:diff_agg_diff_update_one_Delta}--\ref{codeline:diff_agg_diff_update_children_end} compute
   \[
-  A(\pi(v)v) +
-  \Delta(v) + \sum_{w \text{:~child of } v} \sum_{z \in V(T_w)} \Delta(z)
-  = A(\pi(v)v) + \sum_{z \in V(T_v)} \Delta(z)
+  \mathit{diff}(\parent(v)v)
+  =
+  \Delta(v) + \sum_{w \in \Childset(v)} \mathit{diff}(vw)
+  =
+  \Delta(v) + \sum_{w \in \Childset(v)} \sum_{z \in V(T_w)} \Delta(z)
+  = \sum_{z \in V(T_v)} \Delta(z).
   \]
-  that is the sum of the auxiliary values $\Delta$ for all vertices in $T_v$.
 
   Since each update operation is processed in constant time,
   the total time for all $q$ update operations is $O(q)$.
@@ -730,10 +763,10 @@ where $\alpha$ is chosen appropriately depending on the quantity to be computed.
 %     \State \textbf{output} $\CovMult(e)$ for all tree edges $e$ in $E(T)$
     
 %     \\\Procedure{CoverMultiplicity-DFS}{$v$}
-%     \State $\CovMult(\pi(v)v) := \delta(v)$;
+%     \State $\CovMult(\parent(v)v) := \delta(v)$;
 %     \For{\textbf{each} child $w$ of $v$ in $T$}
 %       \State Execute \Call{CoverMultiplicity-DFS}{$w$};
-%       \State $\CovMult(\pi(v)v) := \CovMult(\pi(v)v) + \CovMult(vw)$
+%       \State $\CovMult(\parent(v)v) := \CovMult(\parent(v)v) + \CovMult(vw)$
 %     \EndFor
 %     % \State \textbf{return} $\CovMult(uv)$;
 %     \EndProcedure
@@ -1006,12 +1039,12 @@ of a 2-edge-connected undirected graph.
 %   For each leaf $v$, $\{v\}$ is a MinRS of $G$ if and only if
 %   the following two conditions hold:
 %   \begin{itemize}
-%   \item[\rm (i)] $\pi(v)$ has degree at least 3 in $G$; and
+%   \item[\rm (i)] $\parent(v)$ has degree at least 3 in $G$; and
 %   % \item[\rm (ii)] for any back edge $vu$,
-%   % any tree edge on the $u,\pi(v)$-path in $T$ is covered by
+%   % any tree edge on the $u,\parent(v)$-path in $T$ is covered by
 %   % some back edge outgoing from other vertex than $v$. 
 %   \item[\rm (ii)] let $\lbe(v)=(v,u^*)$,
-%     then, for any tree edge $(x,y)$ on the $u^*,\pi(v)$-path in $T$,
+%     then, for any tree edge $(x,y)$ on the $u^*,\parent(v)$-path in $T$,
 %     there exists a back edge outgoing from a vertex in $T_y - v$
 %     that covers $(x,y)$.
 %   \end{itemize}
@@ -1021,10 +1054,10 @@ of a 2-edge-connected undirected graph.
 %   We show by contraposition.
 %   Suppose that either (i) or (ii) does not hold.
 %   If (i) does not hold, then
-%   $\pi(v)$ has degree 1 in $G - v$,
+%   $\parent(v)$ has degree 1 in $G - v$,
 %   which means that $G - v$ is not 2-edge-connected.
 %   If (ii) does not hold,
-%   then there exists a tree edge $(x,y)$ on the $u^*,\pi(v)$-path in $T$
+%   then there exists a tree edge $(x,y)$ on the $u^*,\parent(v)$-path in $T$
 %   that is not covered by any back edge outgoing from other vertex than $v$.
 %   Since any vertex in $T_y - v$ cannot have a back edge to
 %   a proper ancestor of $x$ in $G - v$,
@@ -1040,10 +1073,10 @@ of a 2-edge-connected undirected graph.
 %   Every back edge $(x, y)$ with $x, y \neq v$ is not a bridge in $G - v$,
 %   since $xy$ and the $y,x$-path in $T$ form a cycle in $G - v$.
 %   Next, we consider tree edges in $G - v$.
-%   For any tree edge not on the $u^*,\pi(v)$-path in $T$,
+%   For any tree edge not on the $u^*,\parent(v)$-path in $T$,
 %   the covering back edge still exists in $G - v$,
 %   which means that such a tree edge is not a bridge in $G - v$.
-%   For any tree edge $(x,y)$ on the $u^*,\pi(v)$-path in $T$,
+%   For any tree edge $(x,y)$ on the $u^*,\parent(v)$-path in $T$,
 %   by (ii),
 %   there exists a back edge outgoing from a vertex in $T_y - v$
 %   that covers $(x,y)$,
@@ -1076,13 +1109,13 @@ of a 2-edge-connected undirected graph.
   By the definition of $S$, $x$ is a leaf of $T$.
   Since $G$ is 2-edge-connected,
   every tree edge is covered by at least one back edge.
-  Thus, it suffices to consider only tree edges on the $y$--$\pi(a)$ path in $T$,
+  Thus, it suffices to consider only tree edges on the $y$--$\parent(a)$ path in $T$,
   where $y$ is the most distant proper ancestor of $x$
   among those adjacent to $x$ by a back edge.
   \newline
   ($\Longrightarrow$)
   We show by contraposition.
-  Suppose that there exists a tree edge $(u,v)$ on the $y$--$\pi(a)$ path in $T$
+  Suppose that there exists a tree edge $(u,v)$ on the $y$--$\parent(a)$ path in $T$
   that is not covered by any back edge outgoing from a vertex  other than those in $S$.
   Any vertex in $T_v - S$ cannot have a back edge to
   a proper ancestor of $u$ in $G - S$,
@@ -1098,11 +1131,11 @@ of a 2-edge-connected undirected graph.
   with $x', y' \not\in S$ is not a bridge in $G - S$,
   since $x'y'$ and the $y'$--$x'$ path in $T$ form a cycle in $G - S$.
   Next, we consider tree edges in $G - S$.
-  For any tree edge not on the $y$--$\pi(a)$-path in $T$,
+  For any tree edge not on the $y$--$\parent(a)$-path in $T$,
   no covering back edge disappears by removing $S$ from $G$,
   % still exists in $G - S$,
   which means that such a tree edge is not a bridge in $G - S$.
-  For any tree edge $(u, v)$ on the $y$--$\pi(a)$-path in $T$,
+  For any tree edge $(u, v)$ on the $y$--$\parent(a)$-path in $T$,
   by the assumption,
   there exists a back edge outgoing from a vertex in $T_v - S$
   that covers $(u,v)$,
@@ -1120,7 +1153,7 @@ of a 2-edge-connected undirected graph.
 % if $e \in \SrcExc_v$,
 % then $e$ is covered by back edges outgoing from $v$,
 % and no back edge outgoing from any other vertex covers $e$.
-% Any tree edge in $\SrcExc_v$ must be on the $\lbeTarget(v)$--$\pi(v)$ path in $T$.
+% Any tree edge in $\SrcExc_v$ must be on the $\lbeTarget(v)$--$\parent(v)$ path in $T$.
 
 % By \lemref{leaf_mrs},
 % $S$ is a MinRS of $G$ if and only if,
@@ -1413,7 +1446,7 @@ Note that $G_P$ or the suppressed DFS-tree $T_P$ may have parallel edges even if
   and $v$ denote the vertex in $P$ closest to $r$ in $T$.
   By Lemmas~\ref{lem:dfs_tree_suppression} and~\ref{lem:max2degpath_mrs},
   we can determine whether $P$ is a MinRS of $G$
-  by checking whether $\CovMult(\pi(v)v) \geq 2$ in $G_P$.
+  by checking whether $\CovMult(\parent(v)v) \geq 2$ in $G_P$.
   By \lemref{cov_info_agg},
   we can compute the cover multiplicities for all tree edges in $O(n+m)$ time.
 \end{proof}
